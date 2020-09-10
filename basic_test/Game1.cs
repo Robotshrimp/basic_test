@@ -1,10 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Xna.Framework.Media;
-using Microsoft.Xna.Framework.Content;
+
+
+
 
 
 namespace basic_test
@@ -19,7 +18,8 @@ namespace basic_test
         SpriteBatch spriteBatch;
         private Texture2D Player;
         private Texture2D level;
-        private Rectangle _playerposition;
+        private Rectangle _playerposition = new Rectangle(100, 100, 96, 48);
+        private Rectangle level_rec = new Rectangle(0, 300, 1024, 1024);
         private bool _isgrounded = false;
         private int _fallspeed = 0;
         private int _notrightspeed = -0;
@@ -55,6 +55,7 @@ namespace basic_test
         //main movement
         private double movedelay = 0;
         public Game1()
+        
         {
             graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
@@ -73,6 +74,7 @@ namespace basic_test
             base.Initialize();
             _playerposition.Width = 96;
             _playerposition.Height = 192;
+            
         }
 
         /// <summary>
@@ -123,7 +125,11 @@ namespace basic_test
             {
                 _isgrounded = false;
             }
-            
+            if (_playerposition.Intersects(level_rec))
+            {
+                _isgrounded = true;
+                _fallspeed = 0;
+            }
             //-------------------------------------------//
             //                                           //
             //           HOROZONTAL MOVEMENT             //
@@ -286,7 +292,8 @@ namespace basic_test
             spriteBatch.Begin();
 
             spriteBatch.Draw(Player, _playerposition, Color.Black);
-            spriteBatch.Draw(level, new Rectangle (0, 0, 1024, 512), Color.Black);
+            spriteBatch.Draw(level, level_rec, Color.Black);
+            
 
             spriteBatch.End();
 
