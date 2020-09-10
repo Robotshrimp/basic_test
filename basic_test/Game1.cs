@@ -4,10 +4,6 @@ using Microsoft.Xna.Framework.Input;
 
 
 
-
-
-
-
 namespace basic_test
 {
     /// <summary>
