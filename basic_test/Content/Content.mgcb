@@ -1,0 +1,39 @@
+
+#----------------------------- Global Properties ----------------------------#
+
+/outputDir:bin/$(Platform)
+/intermediateDir:obj/$(Platform)
+/platform:Windows
+/config:
+/profile:Reach
+/compress:False
+
+#-------------------------------- References --------------------------------#
+
+
+#---------------------------------- Content ---------------------------------#
+
+#begin F:/Users/jack/OneDrive/Pictures/Saved Pictures/BasicShape.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:F:/Users/jack/OneDrive/Pictures/Saved Pictures/BasicShape.png;BasicShape.png
+
+#begin level_test.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:level_test.png
+
