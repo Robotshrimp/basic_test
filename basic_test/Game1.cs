@@ -18,9 +18,14 @@ namespace basic_test
         private Texture2D level;
         private Rectangle _playerposition = new Rectangle(100, 100, 96, 48);
         private Rectangle level_rec = new Rectangle(0, 300, 1024, 1024);
+        private Rectangle[] collision_checker = {
+            new Rectangle(0, 0, 0, 0),
+            new Rectangle(0, 0, 0, 0),
+            new Rectangle(0, 0, 0, 0),
+            new Rectangle(0, 0, 0, 0) };
         private bool _isgrounded = false;
         private int _fallspeed = 0;
-        private int _notrightspeed = -0;
+        private int _notrightspeed = -20;
         
         private double _timesincelastacc = 0;
         private double _timesincelastfric = 0;
@@ -110,10 +115,21 @@ namespace basic_test
                 Exit();
             //--------------------------------------------//
             //                                            //
+            //                  MOVEMENT                  //
+            //                                            //
+            //--------------------------------------------//
+            if (_timesincelastmove >= movedelay)
+            {
+                _playerposition.X -= _notrightspeed;
+                _playerposition.Y += _fallspeed;
+                _timesincelastmove = 0;
+            }
+            //--------------------------------------------//
+            //                                            //
             //                 COLLISON                   //
             //                                            //
             //--------------------------------------------//
-
+            
             if (_playerposition.Bottom > 300)
             {
                 _isgrounded = true;
@@ -180,6 +196,12 @@ namespace basic_test
                 & Keyboard.GetState().IsKeyDown(Keys.D))
             {
                 _notrightspeed -= 8;
+            }
+            if (_isgrounded == true
+                & Keyboard.GetState().IsKeyDown(Keys.Space)
+                & Keyboard.GetState().IsKeyDown(Keys.A))
+            {
+                _notrightspeed += 8;
             }
             //--------------------------------------------//
             //                                            //
@@ -248,15 +270,34 @@ namespace basic_test
 
             //--------------------------------------------//
             //                                            //
-            //                  MOVEMENT                  //
+            //               JUMP PREVENTER               //
             //                                            //
             //--------------------------------------------//
-            if (_timesincelastmove >= movedelay)
-            {
-                _playerposition.X -= _notrightspeed;
-                _playerposition.Y += _fallspeed;
-                _timesincelastmove = 0;
-            }
+            #region
+            collision_checker[0].X = _playerposition.X;
+            collision_checker[1].X = _playerposition.X;
+            collision_checker[2].X = _playerposition.X + _playerposition.Width;
+            collision_checker[3].X = _playerposition.X + _playerposition.Width;
+            #endregion
+            #region
+            collision_checker[0].Y = _playerposition.Y;
+            collision_checker[2].Y = _playerposition.Y;
+            collision_checker[1].Y = _playerposition.Y + _playerposition.Height;
+            collision_checker[3].Y = _playerposition.Y + _playerposition.Height;
+            #endregion
+            #region
+            collision_checker[0].Width = -_notrightspeed;
+            collision_checker[1].Width = -_notrightspeed;
+            collision_checker[2].Width = -_notrightspeed;
+            collision_checker[3].Width = -_notrightspeed;
+            #endregion
+            #region
+            collision_checker[0].Height = _fallspeed;
+            collision_checker[1].Height = _fallspeed;
+            collision_checker[2].Height = _fallspeed;
+            collision_checker[3].Height = _fallspeed;
+            #endregion
+            
 
             // TODO: Add your update logic here
 
@@ -277,6 +318,7 @@ namespace basic_test
                 _timetilljumpslowdown += gameTime.ElapsedGameTime.TotalSeconds;
             }
             
+            
         }
 
         /// <summary>
@@ -288,10 +330,15 @@ namespace basic_test
             GraphicsDevice.Clear(Color.CornflowerBlue);
             
             spriteBatch.Begin();
-
+            #region
+            spriteBatch.Draw(Player, collision_checker[0], Color.Black);
+            spriteBatch.Draw(Player, collision_checker[1], Color.Black);
+            spriteBatch.Draw(Player, collision_checker[2], Color.Black);
+            spriteBatch.Draw(Player, collision_checker[3], Color.Black);
+            #endregion
             spriteBatch.Draw(Player, _playerposition, Color.Black);
             spriteBatch.Draw(level, level_rec, Color.Black);
-            
+
 
             spriteBatch.End();
 
