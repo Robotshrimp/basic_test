@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Input;
 
 
 
+
 namespace basic_test
 {
     /// <summary>
@@ -18,11 +19,20 @@ namespace basic_test
         private Texture2D level;
         private Rectangle _playerposition = new Rectangle(100, 100, 96, 48);
         private Rectangle level_rec = new Rectangle(0, 300, 1024, 1024);
-        private Rectangle[] collision_checker = {
+        private Rectangle[] collision_checker = 
+        {
             new Rectangle(0, 0, 0, 0),
             new Rectangle(0, 0, 0, 0),
             new Rectangle(0, 0, 0, 0),
-            new Rectangle(0, 0, 0, 0) };
+            new Rectangle(0, 0, 0, 0)
+        };
+        private Rectangle[] amount_colliding =
+        {
+            new Rectangle(),
+            new Rectangle(),
+            new Rectangle(),
+            new Rectangle(),
+        };
         private bool _isgrounded = false;
         private int _fallspeed = 0;
         private int _notrightspeed = -20;
@@ -124,12 +134,8 @@ namespace basic_test
                 _playerposition.Y += _fallspeed;
                 _timesincelastmove = 0;
             }
-            //--------------------------------------------//
-            //                                            //
-            //                 COLLISON                   //
-            //                                            //
-            //--------------------------------------------//
             
+            #region COLLISION
             if (_playerposition.Bottom > 300)
             {
                 _isgrounded = true;
@@ -144,11 +150,26 @@ namespace basic_test
                 _isgrounded = true;
                 _fallspeed = 0;
             }
-            //-------------------------------------------//
-            //                                           //
-            //           HOROZONTAL MOVEMENT             //
-            //                                           //
-            //-------------------------------------------//
+            if (collision_checker[0].Intersects(level_rec))
+            {
+                amount_colliding[0] = Rectangle.Intersect(collision_checker[0], level_rec);
+            }
+            if (collision_checker[1].Intersects(level_rec))
+            {
+                amount_colliding[1] = Rectangle.Intersect(collision_checker[100], level_rec);
+            }
+            if (collision_checker[2].Intersects(level_rec))
+            {
+                amount_colliding[2] = Rectangle.Intersect(collision_checker[2], level_rec);
+            }
+            if (collision_checker[3].Intersects(level_rec))
+            {
+                amount_colliding[3] = Rectangle.Intersect(collision_checker[3], level_rec);
+            }
+
+
+            #endregion
+            #region HOROZONTAL MOVEMENT
             if ((Keyboard.GetState().IsKeyDown(Keys.A) 
                 & (_notrightspeed < speedcap))
                 & (_timesincelastacc > accdelay)
@@ -180,11 +201,8 @@ namespace basic_test
                 _notrightspeed -= speed/2;
                 _timesincelastacc = 0;
             }
-            //--------------------------------------------//
-            //                                            //
-            //                   JUMP                     //
-            //                                            //
-            //--------------------------------------------//
+            #endregion
+            #region JUMP
             if (_isgrounded == true
                 & Keyboard.GetState().IsKeyDown(Keys.Space))
             {
@@ -203,11 +221,8 @@ namespace basic_test
             {
                 _notrightspeed += 8;
             }
-            //--------------------------------------------//
-            //                                            //
-            //                  GRAVITY                   //
-            //                                            //
-            //--------------------------------------------//
+            #endregion
+            #region GRAVITY
             if (_isgrounded == false 
                 & _fallspeed >= -4 
                 & _fallspeed < fallcap1
@@ -244,11 +259,8 @@ namespace basic_test
                 _fallspeed += gravspeed;
                 _timesincelastjumpslowdown = 0;
             }
-            //--------------------------------------------//
-            //                                            //
-            //                  FRICTION                  //
-            //                                            //
-            //--------------------------------------------//
+#endregion
+            #region FRICTION
             if ((!Keyboard.GetState().IsKeyDown(Keys.A) 
                 & (_timesincelastfric >= fricdelay)
                 & (_notrightspeed > 0)) 
@@ -267,35 +279,75 @@ namespace basic_test
                 _notrightspeed += friction;
                 _timesincelastfric = 0;
             }
-
+            #endregion
             //--------------------------------------------//
             //                                            //
             //               JUMP PREVENTER               //
             //                                            //
             //--------------------------------------------//
-            #region
-            collision_checker[0].X = _playerposition.X;
-            collision_checker[1].X = _playerposition.X;
-            collision_checker[2].X = _playerposition.X + _playerposition.Width;
-            collision_checker[3].X = _playerposition.X + _playerposition.Width;
+            #region X
+            if (-_notrightspeed >= 0)
+            {
+                collision_checker[0].X = _playerposition.X;
+                collision_checker[1].X = _playerposition.X;
+                collision_checker[2].X = _playerposition.X + _playerposition.Width;
+                collision_checker[3].X = _playerposition.X + _playerposition.Width;
+            }
+            if (-_notrightspeed < 0)
+            {
+                collision_checker[0].X = _playerposition.X - _notrightspeed;
+                collision_checker[1].X = _playerposition.X - _notrightspeed;
+                collision_checker[2].X = _playerposition.X + _playerposition.Width - _notrightspeed;
+                collision_checker[3].X = _playerposition.X + _playerposition.Width - _notrightspeed;
+            }
+            #endregion 
+            #region Y
+            if (_fallspeed >= 0)
+            {
+                collision_checker[0].Y = _playerposition.Y;
+                collision_checker[2].Y = _playerposition.Y;
+                collision_checker[1].Y = _playerposition.Y + _playerposition.Height;
+                collision_checker[3].Y = _playerposition.Y + _playerposition.Height;
+            }
+            if (_fallspeed < 0)
+            {
+                collision_checker[0].Y = _playerposition.Y + _fallspeed;
+                collision_checker[2].Y = _playerposition.Y + _fallspeed;
+                collision_checker[1].Y = _playerposition.Y + _playerposition.Height + _fallspeed;
+                collision_checker[3].Y = _playerposition.Y + _playerposition.Height + _fallspeed;
+            }
             #endregion
-            #region
-            collision_checker[0].Y = _playerposition.Y;
-            collision_checker[2].Y = _playerposition.Y;
-            collision_checker[1].Y = _playerposition.Y + _playerposition.Height;
-            collision_checker[3].Y = _playerposition.Y + _playerposition.Height;
+            #region width
+            if (-_notrightspeed >= 0)
+            {
+                collision_checker[0].Width = -_notrightspeed;
+                collision_checker[1].Width = -_notrightspeed;
+                collision_checker[2].Width = -_notrightspeed;
+                collision_checker[3].Width = -_notrightspeed;
+            }
+            if (-_notrightspeed < 0)
+            {
+                collision_checker[0].Width = _notrightspeed;
+                collision_checker[1].Width = _notrightspeed;
+                collision_checker[2].Width = _notrightspeed;
+                collision_checker[3].Width = _notrightspeed;
+            }
             #endregion
-            #region
-            collision_checker[0].Width = -_notrightspeed;
-            collision_checker[1].Width = -_notrightspeed;
-            collision_checker[2].Width = -_notrightspeed;
-            collision_checker[3].Width = -_notrightspeed;
-            #endregion
-            #region
-            collision_checker[0].Height = _fallspeed;
-            collision_checker[1].Height = _fallspeed;
-            collision_checker[2].Height = _fallspeed;
-            collision_checker[3].Height = _fallspeed;
+            #region height
+            if (_fallspeed >= 0)
+            {
+                collision_checker[0].Height = _fallspeed;
+                collision_checker[1].Height = _fallspeed;
+                collision_checker[2].Height = _fallspeed;
+                collision_checker[3].Height = _fallspeed;
+            }
+            if (_fallspeed < 0)
+            {
+                collision_checker[0].Height = -_fallspeed;
+                collision_checker[1].Height = -_fallspeed;
+                collision_checker[2].Height = -_fallspeed;
+                collision_checker[3].Height = -_fallspeed;
+            }
             #endregion
             
 
