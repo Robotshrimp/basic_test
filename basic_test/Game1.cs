@@ -11,7 +11,10 @@ namespace basic_test
     /// </summary>
     public class Game1 : Game
     {
-        
+        int[,] tileMap;
+
+        int tileWidth = 48;
+        int tileHeight = 48;
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         private Texture2D Player;
@@ -86,9 +89,27 @@ namespace basic_test
             base.Initialize();
             _playerposition.Width = 96;
             _playerposition.Height = 192;
-            
-        }
+            tileMap = new int[,]
+            {
+                {0,0,0,0,0},
+                {0,0,0,0,0},
+                {1,1,1,1,1},
+            };
 
+        }
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            for (int y = 0; y < tileMap.GetLength(0); y++)
+            {
+                for (int x = 0; x < tileMap.GetLength(1); x++)
+                {
+                    spriteBatch.Draw(
+                        Player,
+                        new Vector2(x * tileWidth, y * tileHeight),
+                        Color.Black );
+                }
+            }
+        }
         /// <summary>
         /// LoadContent will be called once per game and is the place to load
         /// all of your content.
@@ -155,7 +176,7 @@ namespace basic_test
             }
             if (collision_checker[1].Intersects(level_rec))
             {
-                amount_colliding[1] = Rectangle.Intersect(collision_checker[100], level_rec);
+                amount_colliding[1] = Rectangle.Intersect(collision_checker[1], level_rec);
             }
             if (collision_checker[2].Intersects(level_rec))
             {
@@ -382,13 +403,13 @@ namespace basic_test
             
             spriteBatch.Begin();
             #region
-            spriteBatch.Draw(Player, collision_checker[0], Color.Black);
-            spriteBatch.Draw(Player, collision_checker[1], Color.Black);
-            spriteBatch.Draw(Player, collision_checker[2], Color.Black);
-            spriteBatch.Draw(Player, collision_checker[3], Color.Black);
+            spriteBatch.Draw(Player, collision_checker[0], Color.Transparent);
+            spriteBatch.Draw(Player, collision_checker[1], Color.Transparent);
+            spriteBatch.Draw(Player, collision_checker[2], Color.Transparent);
+            spriteBatch.Draw(Player, collision_checker[3], Color.Transparent);
             #endregion
             spriteBatch.Draw(Player, _playerposition, Color.Black);
-            spriteBatch.Draw(level, level_rec, Color.Black);
+            
 
 
             spriteBatch.End();
