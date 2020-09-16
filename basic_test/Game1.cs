@@ -12,9 +12,9 @@ namespace basic_test
     public class Game1 : Game
     {
         int[,] tileMap;
-
-        int tileWidth = 48;
-        int tileHeight = 48;
+        
+        int tileWidth = 96;
+        int tileHeight = 96;
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         private Texture2D Player;
@@ -73,6 +73,10 @@ namespace basic_test
         
         {
             graphics = new GraphicsDeviceManager(this);
+            graphics.PreferredBackBufferHeight = 2160;
+            graphics.PreferredBackBufferWidth = 3840;
+            graphics.IsFullScreen = true;
+            
             Content.RootDirectory = "Content";
         }
 
@@ -95,21 +99,24 @@ namespace basic_test
                 {0,0,0,0,0},
                 {1,1,1,1,1},
             };
-
+            
         }
-        public void Draw(SpriteBatch spriteBatch)
-        {
-            for (int y = 0; y < tileMap.GetLength(0); y++)
+            
+            public void Draw(SpriteBatch spriteBatch)
             {
-                for (int x = 0; x < tileMap.GetLength(1); x++)
+                for (int y = 0; y < tileMap.GetLength(0); y++)
                 {
-                    spriteBatch.Draw(
-                        Player,
-                        new Vector2(x * tileWidth, y * tileHeight),
-                        Color.Black );
+                    for (int x = 0; x < tileMap.GetLength(1); x++)
+                    {
+
+                        spriteBatch.Draw(
+                            Player,
+                            new Vector2(x * tileWidth, y * tileHeight),
+                            Color.White);
+                    }
                 }
             }
-        }
+            
         /// <summary>
         /// LoadContent will be called once per game and is the place to load
         /// all of your content.
@@ -122,7 +129,8 @@ namespace basic_test
             level = Content.Load<Texture2D>("level_test");
             // TODO: use this.Content to load your game content here
         }
-
+        
+        
         /// <summary>
         /// UnloadContent will be called once per game and is the place to unload
         /// game-specific content.
@@ -156,7 +164,7 @@ namespace basic_test
             }
             
             #region COLLISION
-            if (_playerposition.Bottom > 300)
+            if (_playerposition.Bottom > 288)
             {
                 _isgrounded = true;
                 _fallspeed = 0;
@@ -409,13 +417,13 @@ namespace basic_test
             spriteBatch.Draw(Player, collision_checker[3], Color.Transparent);
             #endregion
             spriteBatch.Draw(Player, _playerposition, Color.Black);
-            
+            spriteBatch.Draw(Player, level_rec, Color.Black);
 
 
             spriteBatch.End();
 
             // TODO: Add your drawing code here
-
+            graphics.IsFullScreen = true;
             base.Draw(gameTime);
 
         }
