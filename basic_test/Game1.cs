@@ -15,12 +15,13 @@ namespace basic_test
         
         int tileWidth = 96;
         int tileHeight = 96;
+        bool is_crouching = false;
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         private Texture2D Player;
         private Texture2D level;
         private Rectangle _playerposition = new Rectangle(100, 100, 96, 48);
-        private Rectangle level_rec = new Rectangle(0, 300, 1024, 1024);
+        private Rectangle level_rec = new Rectangle(0, 0, 0, 0);//(0, 300, 1024, 1024);
         private Rectangle[] collision_checker = 
         {
             new Rectangle(0, 0, 0, 0),
@@ -37,7 +38,7 @@ namespace basic_test
         };
         private bool _isgrounded = false;
         private int _fallspeed = 0;
-        private int _notrightspeed = -20;
+        private int _notrightspeed = -24;
         
         private double _timesincelastacc = 0;
         private double _timesincelastfric = 0;
@@ -48,24 +49,24 @@ namespace basic_test
         private double _timesincelastjumpslowdown = 0;
             //movement variables
         //horozontal
-        private int speed = 4;
-        private int friction = 2;
-        private int speedcap = 12;
-        private int midaircap = 8;
+        private int speed = 6;
+        private int friction = 3;
+        private int speedcap = 18;
+        private int midaircap = 12;
         //vertical
-        private int fallcap1 = 12;
-        private int fallcap2 = 24;
+        private int fallcap1 = 36;
+        private int fallcap2 = 48;
         private int drag = 1;
         private int gravspeed = 6;
-        private int jumpspeed = 12;
+        private int jumpspeed = 24;
         //timer variables
         //vertical
         private double accdelay = 0.1;
         private double fricdelay = 0;
-        private double jumpslowdowndelay = 0.1;
-        private double jumpvariation = 0.25;
+        private double jumpslowdowndelay = 0.05;
+        private double jumpvariation = 0.15;
         //vertical
-        private double falldelay = 0.1;
+        private double falldelay = 0.05;
         private double airresdelay = 0.1;
         //main movement
         private double movedelay = 0;
@@ -95,9 +96,13 @@ namespace basic_test
             _playerposition.Height = 192;
             tileMap = new int[,]
             {
-                {0,0,0,0,0},
-                {0,0,0,0,0},
-                {1,1,1,1,1},
+                {0,0,0,0,0,0,0,0,0},
+                {0,0,0,0,0,0,0,0,0},
+                {0,0,0,0,0,0,0,0,0},
+                {0,0,0,0,0,0,0,0,0},
+                {0,0,0,0,0,0,0,0,0},
+                {0,0,0,0,0,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1},
             };
             
         }
@@ -108,18 +113,20 @@ namespace basic_test
                 {
                     for (int x = 0; x < tileMap.GetLength(1); x++)
                     {
-
-                        spriteBatch.Draw(
-                            Player,
-                            new Vector2(x * tileWidth, y * tileHeight),
-                            Color.White);
+                        if (tileMap[y, x] == 1)
+                        {
+                            spriteBatch.Draw(
+                                level,
+                                new Rectangle(x * tileWidth, y * tileHeight, tileWidth, tileHeight),
+                                Color.White);
+                        }
                     }
                 }
             }
             
         /// <summary>
         /// LoadContent will be called once per game and is the place to load
-        /// all of your content.
+        /// all of your content.play
         /// </summary>
         protected override void LoadContent()
         {
@@ -162,11 +169,57 @@ namespace basic_test
                 _playerposition.Y += _fallspeed;
                 _timesincelastmove = 0;
             }
-            
+
+            if (_playerposition.Height > 192)
+            {
+                _playerposition.Height -= 8;
+                _playerposition.Y += 8;
+            }
+            if (_playerposition.Width < 96)
+            {
+                _playerposition.Width += 8;
+                _playerposition.X -= 4;
+            }
+
+            if (Keyboard.GetState().IsKeyDown(Keys.S)
+                & _isgrounded == true)
+            {
+                _playerposition.Height = 96;
+                
+                _playerposition.Width = 120;
+                if (is_crouching == false)
+                {
+                    _playerposition.X -= (_playerposition.Width - 96) / 2;
+                    _playerposition.Y += _playerposition.Height - 96;
+                }
+                is_crouching = true;
+            }
+            else
+            {
+                if (_playerposition.Height < 192)
+                {
+                    _playerposition.Height += 8;
+                    _playerposition.Y -= 8;
+                }
+                if (_playerposition.Width > 96)
+                {
+                    _playerposition.Width -= 8;
+                    _playerposition.X += 4;
+                }
+                is_crouching = false;
+            }
+
             #region COLLISION
-            if (_playerposition.Bottom > 288)
+            if (_playerposition.Bottom > 2000)
             {
                 _isgrounded = true;
+                if (_fallspeed > 17)
+                {
+                    _playerposition.Height -= 2 * _fallspeed;
+                    _playerposition.Y += 2 * _fallspeed;
+                    _playerposition.Width += _fallspeed;
+                    _playerposition.X -= _fallspeed / 2;
+                }
                 _fallspeed = 0;
             }
             else
@@ -212,6 +265,7 @@ namespace basic_test
                 & _isgrounded == false)
             {
                 _notrightspeed += speed/2;
+                _timesincelastacc = 0;
             }
             if ((Keyboard.GetState().IsKeyDown(Keys.D) 
                 & (_notrightspeed > -speedcap))
@@ -236,18 +290,22 @@ namespace basic_test
             {
                 _fallspeed -= jumpspeed;
                 _timetilljumpslowdown = 0;
+                _playerposition.Height += jumpspeed * 2;
+                _playerposition.Y -= jumpspeed * 2;
+                _playerposition.Width -= jumpspeed;
+                _playerposition.X += jumpspeed / 2;
             }
             if (_isgrounded == true
                 & Keyboard.GetState().IsKeyDown(Keys.Space)
                 & Keyboard.GetState().IsKeyDown(Keys.D))
             {
-                _notrightspeed -= 8;
+                _notrightspeed -= 9;
             }
             if (_isgrounded == true
                 & Keyboard.GetState().IsKeyDown(Keys.Space)
                 & Keyboard.GetState().IsKeyDown(Keys.A))
             {
-                _notrightspeed += 8;
+                _notrightspeed += 9;
             }
             #endregion
             #region GRAVITY
@@ -313,70 +371,37 @@ namespace basic_test
             //               JUMP PREVENTER               //
             //                                            //
             //--------------------------------------------//
-            #region X
-            if (-_notrightspeed >= 0)
+            for (int x = 0;
+                x < collision_checker.GetLength(0);
+                x++)
             {
-                collision_checker[0].X = _playerposition.X;
-                collision_checker[1].X = _playerposition.X;
-                collision_checker[2].X = _playerposition.X + _playerposition.Width;
-                collision_checker[3].X = _playerposition.X + _playerposition.Width;
+                collision_checker[x].X = _playerposition.X;
+                collision_checker[x].Y = _playerposition.Y;
+                collision_checker[x].Width = -_notrightspeed;
+                collision_checker[x].Height = _fallspeed;
+                if (x == 2 
+                    || x == 3)
+                {
+                    collision_checker[x].X += _playerposition.Width;
+                }
+                if (-_notrightspeed < 0)
+                {
+                    collision_checker[x].X -= _notrightspeed;
+                    collision_checker[x].Width = _notrightspeed;
+                }
+
+                if (x == 1 
+                    || x == 3)
+                {
+                    collision_checker[x].Y += _playerposition.Height;
+                }
+                if (_fallspeed < 0)
+                {
+                    collision_checker[x].Y += _fallspeed;
+                    collision_checker[x].Height = -_fallspeed;
+                }
             }
-            if (-_notrightspeed < 0)
-            {
-                collision_checker[0].X = _playerposition.X - _notrightspeed;
-                collision_checker[1].X = _playerposition.X - _notrightspeed;
-                collision_checker[2].X = _playerposition.X + _playerposition.Width - _notrightspeed;
-                collision_checker[3].X = _playerposition.X + _playerposition.Width - _notrightspeed;
-            }
-            #endregion 
-            #region Y
-            if (_fallspeed >= 0)
-            {
-                collision_checker[0].Y = _playerposition.Y;
-                collision_checker[2].Y = _playerposition.Y;
-                collision_checker[1].Y = _playerposition.Y + _playerposition.Height;
-                collision_checker[3].Y = _playerposition.Y + _playerposition.Height;
-            }
-            if (_fallspeed < 0)
-            {
-                collision_checker[0].Y = _playerposition.Y + _fallspeed;
-                collision_checker[2].Y = _playerposition.Y + _fallspeed;
-                collision_checker[1].Y = _playerposition.Y + _playerposition.Height + _fallspeed;
-                collision_checker[3].Y = _playerposition.Y + _playerposition.Height + _fallspeed;
-            }
-            #endregion
-            #region width
-            if (-_notrightspeed >= 0)
-            {
-                collision_checker[0].Width = -_notrightspeed;
-                collision_checker[1].Width = -_notrightspeed;
-                collision_checker[2].Width = -_notrightspeed;
-                collision_checker[3].Width = -_notrightspeed;
-            }
-            if (-_notrightspeed < 0)
-            {
-                collision_checker[0].Width = _notrightspeed;
-                collision_checker[1].Width = _notrightspeed;
-                collision_checker[2].Width = _notrightspeed;
-                collision_checker[3].Width = _notrightspeed;
-            }
-            #endregion
-            #region height
-            if (_fallspeed >= 0)
-            {
-                collision_checker[0].Height = _fallspeed;
-                collision_checker[1].Height = _fallspeed;
-                collision_checker[2].Height = _fallspeed;
-                collision_checker[3].Height = _fallspeed;
-            }
-            if (_fallspeed < 0)
-            {
-                collision_checker[0].Height = -_fallspeed;
-                collision_checker[1].Height = -_fallspeed;
-                collision_checker[2].Height = -_fallspeed;
-                collision_checker[3].Height = -_fallspeed;
-            }
-            #endregion
+
             
 
             // TODO: Add your update logic here
@@ -411,14 +436,24 @@ namespace basic_test
             
             spriteBatch.Begin();
             #region
-            spriteBatch.Draw(Player, collision_checker[0], Color.Transparent);
-            spriteBatch.Draw(Player, collision_checker[1], Color.Transparent);
-            spriteBatch.Draw(Player, collision_checker[2], Color.Transparent);
-            spriteBatch.Draw(Player, collision_checker[3], Color.Transparent);
+            spriteBatch.Draw(Player, collision_checker[0], Color.Black);
+            spriteBatch.Draw(Player, collision_checker[1], Color.Black);
+            spriteBatch.Draw(Player, collision_checker[2], Color.Black);
+            spriteBatch.Draw(Player, collision_checker[3], Color.Black);
             #endregion
             spriteBatch.Draw(Player, _playerposition, Color.Black);
-            spriteBatch.Draw(Player, level_rec, Color.Black);
+            //spriteBatch.Draw(Player, level_rec, Color.Black);
+            for (int y = 0; y < tileMap.GetLength(0); y++)
+            {
+                for (int x = 0; x < tileMap.GetLength(1); x++)
+                {
 
+                    spriteBatch.Draw(
+                        Player,
+                        new Vector2(x * tileWidth, y * tileHeight),
+                        Color.Black);
+                }
+            }
 
             spriteBatch.End();
 
