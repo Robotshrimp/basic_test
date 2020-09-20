@@ -184,15 +184,16 @@ namespace basic_test
             if (Keyboard.GetState().IsKeyDown(Keys.S)
                 & _isgrounded == true)
             {
-                _playerposition.Height = 96;
-                
-                _playerposition.Width = 120;
                 if (is_crouching == false)
                 {
                     _playerposition.X -= (_playerposition.Width - 96) / 2;
                     _playerposition.Y += _playerposition.Height - 96;
                 }
                 is_crouching = true;
+                _playerposition.Height = 96;
+                
+                _playerposition.Width = 120;
+                
             }
             else
             {
