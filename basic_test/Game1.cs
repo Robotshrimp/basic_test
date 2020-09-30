@@ -22,23 +22,10 @@ namespace basic_test
         private Texture2D level;
         public Rectangle _player = new Rectangle(100, 100, 96, 48);
         private Rectangle level_rec = new Rectangle(0, 0, 0, 0);//(0, 300, 1024, 1024);
-        private Rectangle[] collision_checker = 
-        {
-            new Rectangle(0, 0, 0, 0),
-            new Rectangle(0, 0, 0, 0),
-            new Rectangle(0, 0, 0, 0),
-            new Rectangle(0, 0, 0, 0)
-        };
-        private Rectangle[] amount_colliding =
-        {
-            new Rectangle(),
-            new Rectangle(),
-            new Rectangle(),
-            new Rectangle(),
-        };
+
         private bool _isgrounded = false;
         private int _fallspeed = 0;
-        private int _notrightspeed = -24;
+        private int _notrightspeed = 0;
         
         private double _timesincelastacc = 0;
         private double _timesincelastfric = 0;
@@ -70,6 +57,13 @@ namespace basic_test
         private double airresdelay = 0.1;
         //main movement
         private double movedelay = 0;
+        private bool[] iscoliding =
+        {
+            false,
+            false,
+            false,
+            false,
+        };
         public Game1()
         
         {
@@ -97,18 +91,29 @@ namespace basic_test
             _player.Height = 192;
             tileMap = new int[,]
             {
-                {0,0,0,0,0,0,0,0,0},
-                {0,0,0,0,0,0,0,0,0},
-                {0,0,0,0,0,0,0,0,0},
-                {0,0,0,0,0,0,0,0,0},
-                {0,0,0,0,0,0,0,0,0},
-                {0,0,0,0,0,1,1,1,1},
-                {1,1,1,1,1,1,1,1,1},
+                {0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0},
+                {0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0},
+                {0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0},
+                {1,1,1,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0},
+                {1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0},
+                {1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0},
+                {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,1,1},
+                {1,1,1,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1},
+                {1,1,1,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1},
+                {1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1},
             };
             
         }
         #region squishy function
-        static public void _Squish(int horozontalSquish, int verticalSquish, ref Rectangle _objectSquished)
+        static public void _Squish(
+            int horozontalSquish, 
+            int verticalSquish, 
+            ref Rectangle _objectSquished)
         {
 
             _objectSquished.Width += horozontalSquish;
@@ -119,198 +124,280 @@ namespace basic_test
         #endregion
         #region collision detector function
         static public void _collide(
-            ref Rectangle colliding_object, 
             ref Rectangle player, 
-            int tile_size, int[,] 
-            mapOfTiles, bool isleft, 
-            bool istop, int affected_varx, 
-            int affected_vary)
+            int tile_size, 
+            int[,] mapOfTiles, 
+            int affected_varx, 
+            int affected_vary,
+            bool[] side_touching_wall)
         {
-            int left_tile = colliding_object.Left / tile_size;
-            int right_tile = colliding_object.Right / tile_size;
-            int top_tile = colliding_object.Top / tile_size;
-            int bottom_tile = colliding_object.Bottom / tile_size;
+            Rectangle[] collision_detector =
+            {
+                new Rectangle(player.X - affected_varx, player.Y - affected_vary,  player.Width + affected_varx, player.Height - affected_vary),
+                new Rectangle(player.X - affected_varx, player.Y, player.Width + affected_varx, player.Height + affected_vary),
+                new Rectangle(player.X, player.Y - affected_vary, player.Width - affected_varx, player.Height - affected_vary),
+                new Rectangle(player.X, player.Y,  player.Width - affected_varx, player.Height + affected_vary)
+            };
+            Rectangle relivant_rectangle = new Rectangle();
             int x_restricter = 0;
             int y_restricter = 0;
             bool isrelivant = false;
             bool isgoingleft = true;
             bool isgoingup = true;
-            if (left_tile < 0)
+            isrelivant = false;
+            isgoingleft = true;
+            isgoingup = true;
+            if (affected_varx < 0)
             {
-                left_tile = 0;
+                isgoingleft = false;
             }
-            if (right_tile > mapOfTiles.GetLength(1))
-            {
-                right_tile = mapOfTiles.GetLength(1);
-            }
-            if (top_tile < 0)
-            {
-                top_tile = 0;
-            }
-            if (bottom_tile > mapOfTiles.GetLength(0))
-            {
-                bottom_tile = mapOfTiles.GetLength(0);
-            }
-            if (isleft == true)
-            {
-                if (istop == true
-                    & (affected_vary < 0
-                    | affected_varx > 0))
+            if (affected_vary > 0)
                 {
-                    isrelivant = true;
+                    isgoingup = false;
                 }
-                else if (affected_vary > 0)
-                {
-                    isrelivant = true;
-                }
-            }
-            else
+            if (affected_vary != 0
+                | affected_varx != 0)
             {
-                if (istop == true
-                    & (affected_vary < 0
-                    | affected_varx < 0))
+                if (isgoingleft == true)
                 {
-                    isrelivant = true;
-                }
-                else if (affected_vary > 0)
-                {
-                    isrelivant = true;
-                }
-            }
-            if (isrelivant == true)
-            {
-                if (affected_varx > 0)
-                {
-                    if (affected_vary < 0)
+                    if (isgoingup == true)
                     {
-                        isgoingup = false;
+                        isrelivant = true;
+                        relivant_rectangle = collision_detector[0];
+                    }
+                    else if (isgoingup == false)
+                    {
+                        isrelivant = true;
+                        relivant_rectangle = collision_detector[1];
+                        y_restricter = relivant_rectangle.Y + relivant_rectangle.Height;
                     }
                 }
                 else
                 {
-                    isgoingleft = false;
-                    if (affected_vary < 0)
+                    x_restricter = relivant_rectangle.X + relivant_rectangle.Width;
+                    if (isgoingup == true)
                     {
-                        isgoingup = false;
+                        isrelivant = true;
+                        relivant_rectangle = collision_detector[2];
+                    }
+                    else if (isgoingup == false)
+                    {
+                        isrelivant = true;
+                        relivant_rectangle = collision_detector[3];
+                        y_restricter = relivant_rectangle.Y + relivant_rectangle.Height;
                     }
                 }
             }
+            int left_tile = relivant_rectangle.Left / tile_size;
+            int right_tile = relivant_rectangle.Right / tile_size;
+            int top_tile = relivant_rectangle.Top / tile_size;
+            int bottom_tile = relivant_rectangle.Bottom / tile_size;
             if (isrelivant == true)
-            { 
-                for (int i = left_tile - 1; i <= right_tile; i++)
+            {
+
+
+                if (left_tile < 0)
                 {
-                    for (int j = top_tile - 1; j <= bottom_tile; j++)
+                    left_tile = 0;
+                }
+                if (right_tile > mapOfTiles.GetLength(1))
+                {
+                    right_tile = mapOfTiles.GetLength(1);
+                }
+                if (top_tile < 0)
+                {
+                    top_tile = 0;
+                }
+                if (bottom_tile > mapOfTiles.GetLength(0))
+                {
+                    bottom_tile = mapOfTiles.GetLength(0);
+                }
+
+                int slope = 0;
+                if (affected_varx != 0)
+                {
+                    slope = (-affected_vary)/ affected_varx;
+                }
+
+                
+                for (int i = left_tile; i <= right_tile; i++)
+                {
+                    for (int j = top_tile; j <= bottom_tile; j++)
                     {
                         if (mapOfTiles[i, j] == 1)
                         {
-                            if (isleft == true)
+                            Rectangle tile_check = new Rectangle(i * tile_size, j * tile_size, tile_size, tile_size);
+                            if (isgoingleft == true)
                             {
-                                if (istop == true)
+                                if (isgoingup == true)
                                 {
-                                    if (isgoingleft == true)
+                                    if (tile_check.Y - relivant_rectangle.Y + tile_size >= tile_check.X + tile_size - relivant_rectangle.X * slope
+                                        | tile_check.Y - relivant_rectangle.Y <= tile_check.X + tile_size - relivant_rectangle.X * slope + player.Height)
                                     {
-                                        if (isgoingup == true)
+                                        if (mapOfTiles[i + 1,j] != 1)
                                         {
-
-                                        }
-                                        else
-                                        {
-                                            
+                                            if (x_restricter < tile_check.X + tile_size)
+                                            {
+                                                x_restricter = tile_check.X + tile_size;
+                                            }
                                         }
                                     }
-                                    else
+                                    if (affected_varx != 0
+                                        && slope != 0
+                                        && (tile_check.X - relivant_rectangle.X + tile_size >= (tile_check.Y + tile_size - relivant_rectangle.Y) / slope
+                                        | tile_check.X - relivant_rectangle.X <= tile_check.Y + tile_size - relivant_rectangle.Y / slope + player.Width))
+                                    {                                            
+                                        if (mapOfTiles[i, j + 1] != 1)
+                                        {
+                                            if (y_restricter < tile_check.Y + tile_size)
+                                            {
+                                                y_restricter = tile_check.Y + tile_size;
+                                            }
+                                        }
+                                    }
+                                    if (affected_varx == 0)
                                     {
-
+                                        if (y_restricter < tile_check.Y + tile_size)
+                                        {
+                                            y_restricter = tile_check.Y + tile_size;
+                                        }
                                     }
                                 }
                                 else
                                 {
-                                    if (isgoingleft == true)
+                                    if (tile_check.Y - relivant_rectangle.Y + tile_size >= affected_vary + (tile_check.X + tile_size - relivant_rectangle.X * slope)
+                                        | tile_check.Y - relivant_rectangle.Y <= affected_vary + (tile_check.X + tile_size - relivant_rectangle.X * slope) + player.Height)
                                     {
-                                        if (isgoingup == true)
+                                        if (mapOfTiles[i + 1, j] != 1)
                                         {
-
-                                        }
-                                        else
-                                        {
-
+                                            if (x_restricter < tile_check.X + tile_size)
+                                            {
+                                                x_restricter = tile_check.X + tile_size;
+                                            }
                                         }
                                     }
-                                    else
+                                    if (affected_varx != 0 &&
+                                        slope != 0
+                                        && (tile_check.X - relivant_rectangle.X + tile_size >= relivant_rectangle.Y + relivant_rectangle.Height - tile_check.Y / slope
+                                        | tile_check.X - relivant_rectangle.X <= relivant_rectangle.Y + relivant_rectangle.Height - tile_check.Y / slope + player.Width))
                                     {
-
+                                        if (mapOfTiles[i, j - 1] != 1)
+                                        {
+                                            if (y_restricter > tile_check.Y)
+                                            {
+                                                y_restricter = tile_check.Y;
+                                            }
+                                        }
+                                    }
+                                    if (affected_varx == 0)
+                                    {
+                                        if (y_restricter > tile_check.Y)
+                                        {
+                                            y_restricter = tile_check.Y;
+                                        }
                                     }
                                 }
                             }
                             else
                             {
 
-                                if (istop == true)
+                                if (isgoingup == true)
                                 {
-                                    if (isgoingleft == false)
+                                        
+                                    if (tile_check.Y - relivant_rectangle.Y + tile_size <= affected_vary + (relivant_rectangle.X + relivant_rectangle.Width - tile_check.X * slope)
+                                        | tile_check.Y - relivant_rectangle.Y >= affected_vary + (relivant_rectangle.X + relivant_rectangle.Width - tile_check.X * slope) + player.Height)
                                     {
-                                        if (isgoingup == true)
+                                            
+                                        if (mapOfTiles[i - 1, j] != 1)
                                         {
-
-                                        }
-                                        else
-                                        {
-
+                                            if (x_restricter > tile_check.X)
+                                            {
+                                                x_restricter = tile_check.X;
+                                            }
                                         }
                                     }
-                                    else
+                                    if (slope != 0
+                                        && (tile_check.X - relivant_rectangle.X + tile_size >= -affected_varx + (tile_check.Y + tile_size - relivant_rectangle.Y / slope)
+                                        | tile_check.X - relivant_rectangle.X <= -affected_varx + (tile_check.Y + tile_size - relivant_rectangle.Y / slope) + player.Width))
                                     {
-
+                                        if (mapOfTiles[i, j + 1] != 1)
+                                        {
+                                            if (y_restricter < tile_check.Y + tile_size)
+                                            {
+                                                y_restricter = tile_check.Y + tile_size;
+                                            }
+                                        }
                                     }
                                 }
                                 else
                                 {
-                                    if (isgoingleft == false)
+                                    if (tile_check.Y - relivant_rectangle.Y + tile_size >= -affected_vary - (relivant_rectangle.X + relivant_rectangle.Width - tile_check.X * slope)
+                                        | tile_check.Y - relivant_rectangle.Y <= -affected_varx - (relivant_rectangle.X + relivant_rectangle.Width - tile_check.X * slope) + player.Height)
                                     {
-                                        if (isgoingup == true)
+                                        if (mapOfTiles[i - 1, j] != 1)
                                         {
-
-                                        }
-                                        else
-                                        {
-
+                                            if (x_restricter > tile_check.X)
+                                            {
+                                                x_restricter = tile_check.X;
+                                            }
                                         }
                                     }
-                                    else
+                                    if (slope != 0
+                                        && tile_check.X - relivant_rectangle.X + tile_size >= -affected_varx - (relivant_rectangle.Y + relivant_rectangle.Height) - tile_check.Y / slope
+                                        | tile_check.X - relivant_rectangle.X <= -affected_varx - (relivant_rectangle.Y + relivant_rectangle.Height) - tile_check.Y / slope + player.Width)
                                     {
-
+                                            
+                                        if (mapOfTiles[i, j - 1] != 1)
+                                        {
+                                            if (y_restricter > tile_check.Y)
+                                            {
+                                                y_restricter = tile_check.Y;
+                                            }
+                                        }
                                     }
                                 }
                             }
+                            
                         }
                     }
                 }
-            }
-            if (isleft == true)
-            {
-                if (istop == true)
+                if (isgoingleft == true)
                 {
-                    
+                    if (affected_varx != 0)
+                    {
+                        affected_varx -= x_restricter - relivant_rectangle.X;
+                        side_touching_wall[0] = true;
+                    }
+                    if (isgoingup == true)
+                    {
+                        affected_vary += y_restricter - relivant_rectangle.Y;
+                        side_touching_wall[2] = true;
+                    }
+                    else
+                    {
+                        affected_vary += y_restricter - relivant_rectangle.Y - relivant_rectangle.Height;
+                        side_touching_wall[3] = true;
+                    }
                 }
                 else
                 {
-
+                    affected_varx -= x_restricter - (relivant_rectangle.X + relivant_rectangle.Width);
+                    side_touching_wall[1] = true;
+                    if (isgoingup == true)
+                    {
+                        affected_vary += y_restricter - relivant_rectangle.Y;
+                        side_touching_wall[2] = true;
+                    }
+                    else
+                    {
+                        affected_vary += y_restricter - relivant_rectangle.Y - relivant_rectangle.Height;
+                        side_touching_wall[3] = true;
+                    }
                 }
-            }
-            else
-            {
-                if (istop == true)
-                {
-
-                }
-                else
-                {
-
-                }
-            }
+            }            
         }
         #endregion
-
+        
         /// <summary>
         /// LoadContent will be called once per game and is the place to load
         /// all of your content.play
@@ -320,7 +407,7 @@ namespace basic_test
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
             Player = Content.Load<Texture2D>("BasicShape");
-            level = Content.Load<Texture2D>("level_test");
+            level = Content.Load<Texture2D>("test_level");
             // TODO: use this.Content to load your game content here
         }
         
@@ -350,11 +437,23 @@ namespace basic_test
             //                  MOVEMENT                  //
             //                                            //
             //--------------------------------------------//
+            
             if (_timesincelastmove >= movedelay)
             {
+                _collide(ref _player, tileHeight, tileMap, _notrightspeed, _fallspeed, iscoliding);   
                 _player.X -= _notrightspeed;
                 _player.Y += _fallspeed;
                 _timesincelastmove = 0;
+                if (iscoliding[0] == true
+                | iscoliding[1] == true)
+                {
+                    _notrightspeed = 0;
+                }
+                if (iscoliding[2] == true
+                    | iscoliding[3] == true)
+                {
+                    _fallspeed = 0;
+                }
             }
 
             if (_player.Height > 192)
@@ -458,13 +557,15 @@ namespace basic_test
                 & is_crouching == false)
                 {
                     if (Keyboard.GetState().IsKeyDown(Keys.D)
-                    & (_notrightspeed > -speedcap))
+                    & (_notrightspeed > -speedcap)
+                    & iscoliding[1] == false)
                     {
                         _notrightspeed -= speed;
                         _timesincelastacc = 0;
                     }
                     if (Keyboard.GetState().IsKeyDown(Keys.A)
-                    & (_notrightspeed < speedcap))
+                    & (_notrightspeed < speedcap)
+                    & iscoliding[0] == false)
                     {
                         _notrightspeed += speed;
                         _timesincelastacc = 0;
@@ -473,13 +574,15 @@ namespace basic_test
                 else
                 {
                     if (Keyboard.GetState().IsKeyDown(Keys.D)
-                    & (_notrightspeed > -midaircap))
+                    & (_notrightspeed > -midaircap)
+                    & iscoliding[1] == false)
                     {
                         _notrightspeed -= speed / 2;
                         _timesincelastacc = 0;
                     }
                     if (Keyboard.GetState().IsKeyDown(Keys.A)
-                    & (_notrightspeed < midaircap))
+                    & (_notrightspeed < midaircap)
+                    & iscoliding[0] == false)
                     {
                         _notrightspeed += speed / 2;
                         _timesincelastacc = 0;
@@ -508,7 +611,7 @@ namespace basic_test
             }
             #endregion
             #region GRAVITY
-            if (_isgrounded == false 
+            if (iscoliding[3] == false 
                 & _fallspeed >= -4 
                 & _fallspeed < fallcap1
                 & _timesincelastfallacc >= falldelay)
@@ -520,7 +623,7 @@ namespace basic_test
                 & _fallspeed >= -4
                 & _fallspeed < fallcap2
                 & _timesincelastfallacc >= falldelay
-                & _isgrounded == false)
+                & iscoliding[3] == false)
             {
                 _fallspeed += gravspeed;
                 _timesincelastfallacc = 0;
@@ -577,36 +680,7 @@ namespace basic_test
             //               JUMP PREVENTER               //
             //                                            //
             //--------------------------------------------//
-            for (int x = 0;
-                x < collision_checker.GetLength(0);
-                x++)
-            {
-                collision_checker[x].X = _player.X;
-                collision_checker[x].Y = _player.Y;
-                collision_checker[x].Width = -_notrightspeed;
-                collision_checker[x].Height = _fallspeed;
-                if (x == 2 
-                    || x == 3)
-                {
-                    collision_checker[x].X += _player.Width;
-                }
-                if (-_notrightspeed < 0)
-                {
-                    collision_checker[x].X -= _notrightspeed;
-                    collision_checker[x].Width = _notrightspeed;
-                }
-
-                if (x == 1 
-                    || x == 3)
-                {
-                    collision_checker[x].Y += _player.Height;
-                }
-                if (_fallspeed < 0)
-                {
-                    collision_checker[x].Y += _fallspeed;
-                    collision_checker[x].Height = -_fallspeed;
-                }
-            }
+            
 
             
 
@@ -642,25 +716,25 @@ namespace basic_test
             
             spriteBatch.Begin();
             #region
-            spriteBatch.Draw(Player, collision_checker[0], Color.Black);
-            spriteBatch.Draw(Player, collision_checker[1], Color.Black);
-            spriteBatch.Draw(Player, collision_checker[2], Color.Black);
-            spriteBatch.Draw(Player, collision_checker[3], Color.Black);
+
             #endregion
             spriteBatch.Draw(Player, _player, Color.Black);
+            //spriteBatch.Draw(level, new Rectangle(0, 0, tileMap.GetLength(1) * tileHeight, tileMap.GetLength(0) * tileHeight), Color.White);
             //spriteBatch.Draw(Player, level_rec, Color.Black);
-            for (int y = 0; y < tileMap.GetLength(0); y++)
+            if (false)
             {
-                for (int x = 0; x < tileMap.GetLength(1); x++)
+                for (int y = 0; y < tileMap.GetLength(0); y++)
                 {
+                    for (int x = 0; x < tileMap.GetLength(1); x++)
+                    {
 
-                    spriteBatch.Draw(
-                        Player,
-                        new Vector2(x * tileWidth, y * tileHeight),
-                        Color.Black);
+                        spriteBatch.Draw(
+                            Player,
+                            new Vector2(x * tileWidth, y * tileHeight),
+                            Color.Black);
+                    }
                 }
             }
-
             spriteBatch.End();
 
             // TODO: Add your drawing code here
