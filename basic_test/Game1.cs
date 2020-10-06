@@ -20,10 +20,10 @@ namespace basic_test
         SpriteBatch spriteBatch;
         private Texture2D Player;
         private Texture2D level;
-        public Rectangle _player = new Rectangle(480, 480, 96, 48);
+        public Rectangle _player = new Rectangle(576, 480, 96, 48);
         private Rectangle level_rec = new Rectangle(0, 0, 0, 0);//(0, 300, 1024, 1024);
-        private int _fallspeed = 96;
-        private int _notrightspeed = 96;
+        private int _fallspeed = 10;
+        private int _notrightspeed = 10;
         
         private double _timesincelastacc = 0;
         private double _timesincelastfric = 0;
@@ -281,7 +281,7 @@ namespace basic_test
                                         if (tile_check.X + tile_size - relivant_rectangle.X <= affected_varx)
                                         {
                                             if (tile_check.Y - relivant_rectangle.Y + tile_size >= relivant_rectangle.Height + (tile_check.X + tile_size - relivant_rectangle.X) * slope - player.Height
-                                                && tile_check.Y - relivant_rectangle.Y >= relivant_rectangle.Height + (tile_check.X + tile_size - relivant_rectangle.X) * slope + player.Height)
+                                                && tile_check.Y - relivant_rectangle.Y <= relivant_rectangle.Height + (tile_check.X + tile_size - relivant_rectangle.X) * slope + player.Height)
                                             {
                                                 if (mapOfTiles[y, x + 1] != 1)
                                                 {
@@ -299,7 +299,7 @@ namespace basic_test
                                             if (affected_varx != 0 &&
                                                 slope != 0
                                                 && tile_check.X - relivant_rectangle.X + tile_size >= relivant_rectangle.Y + (relivant_rectangle.Height - tile_check.Y) / -slope
-                                                && tile_check.X - relivant_rectangle.X + tile_size <= relivant_rectangle.Y + (relivant_rectangle.Height - tile_check.Y) / -slope + player.Width + tile_size)
+                                                && tile_check.X - relivant_rectangle.X <= relivant_rectangle.Y + (relivant_rectangle.Height - tile_check.Y) / -slope + player.Width)
                                             {
                                                 if (mapOfTiles[y - 1, x] != 1)
                                                 {
@@ -399,40 +399,59 @@ namespace basic_test
                                     }
                                 }
                             }
-                        }
+                        }                        
+                    }
+                    
+
+                    if (isgoingleft == true)
+                    {
+                        relivant_rectangle.Width = relivant_rectangle.X + relivant_rectangle.Width - x_restricter;
+                        relivant_rectangle.X = x_restricter;
+                    }
+                    else
+                    {
+                        relivant_rectangle.Width = x_restricter - relivant_rectangle.X;
+                    }
+                    if (isgoingup == true)
+                    {
+                        relivant_rectangle.Height = relivant_rectangle.Y + relivant_rectangle.Height - x_restricter;
+                        relivant_rectangle.Y = x_restricter;
+                    }
+                    else
+                    {
+                        relivant_rectangle.Height = y_restricter - relivant_rectangle.Y;
                     }
                 }
-                
                 if (isgoingleft == true)
                 {
                     if (x_restricter != 0)
                     {
-                        affected_varx -= x_restricter - relivant_rectangle.X;
+                        affected_varx = relivant_rectangle.Width - player.Width;
                     }
                     if (isgoingup == true
                         && y_restricter != 0)
                     {
-                        affected_vary += y_restricter - relivant_rectangle.Y;
+                        affected_vary = -relivant_rectangle.Height + player.Height;
                     }
                     else if (y_restricter != 0)
                     {
-                        affected_vary += y_restricter - (relivant_rectangle.Y + relivant_rectangle.Height);
+                        affected_vary = relivant_rectangle.Height - player.Height;
                     }
                 }
                 else
                 {
                     if (x_restricter != 0)
                     {
-                        affected_varx -= x_restricter - (relivant_rectangle.X + relivant_rectangle.Width);
+                        affected_varx = -relivant_rectangle.Width + player.Width;
                     }
                     if (isgoingup == true
                         && y_restricter != 0)
                     {
-                        affected_vary += y_restricter - relivant_rectangle.Y;
+                        affected_vary = -relivant_rectangle.Height + player.Height;
                     }
                     else if (y_restricter != 0)
                     {
-                        affected_vary += y_restricter - relivant_rectangle.Y - relivant_rectangle.Height;
+                        affected_vary = relivant_rectangle.Height - player.Height;
                     }
                 }
             }            
@@ -496,7 +515,48 @@ namespace basic_test
                     _fallspeed = 0;
                 }
             }
+            int toptile = _player.Top / tileHeight;
+            int bottomtile = _player.Bottom / tileHeight;
+            int lefttile = _player.Left / tileHeight;
+            int righttile = _player.Right / tileHeight;
 
+            if (lefttile < 0)
+            {
+                lefttile = 0;
+            }
+            if (righttile > tileMap.GetLength(1))
+            {
+                righttile = tileMap.GetLength(1);
+            }
+            if (toptile < 0)
+            {
+                toptile = 0;
+            }
+            if (bottomtile > tileMap.GetLength(0))
+            {
+                bottomtile = tileMap.GetLength(0);
+            }
+
+            if (tileMap[bottomtile + 1, lefttile] == 0
+                && tileMap[bottomtile + 1, righttile] == 0)
+            {
+                iscoliding[3] = false;
+            }
+            if (tileMap[toptile - 1, lefttile] == 0
+                && tileMap[toptile - 1, righttile] == 0)
+            {
+                iscoliding[2] = false;
+            }
+            if (tileMap[bottomtile, lefttile - 1] == 0
+                && tileMap[toptile, lefttile - 1] == 0)
+            {
+                iscoliding[0] = false;
+            }
+            if (tileMap[bottomtile, righttile + 1] == 0
+                && tileMap[toptile, righttile + 1] == 0)
+            {
+                iscoliding[1] = false;
+            }
             if (_player.Height > 192)
             {
                 _player.Height -= 4;
