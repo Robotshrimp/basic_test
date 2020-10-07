@@ -22,8 +22,8 @@ namespace basic_test
         private Texture2D level;
         public Rectangle _player = new Rectangle(576, 480, 96, 48);
         private Rectangle level_rec = new Rectangle(0, 0, 0, 0);//(0, 300, 1024, 1024);
-        private int _fallspeed = 10;
-        private int _notrightspeed = 10;
+        private int _fallspeed = 6;
+        private int _notrightspeed = 0;
         
         private double _timesincelastacc = 0;
         private double _timesincelastfric = 0;
@@ -129,6 +129,10 @@ namespace basic_test
             ref int affected_vary,
             bool[] side_touching_wall)
         {
+            side_touching_wall[0] = false;
+            side_touching_wall[1] = false;
+            side_touching_wall[2] = false;
+            side_touching_wall[3] = false;
             Rectangle[] collision_detector =
             {
                 new Rectangle(player.X - affected_varx, player.Y + affected_vary,  player.Width + affected_varx, player.Height - affected_vary),
@@ -162,6 +166,7 @@ namespace basic_test
                     {
                         isrelivant = true;
                         relivant_rectangle = collision_detector[0];
+                        y_restricter = relivant_rectangle.Y;
                     }
                     else if (isgoingup == false)
                     {
@@ -169,6 +174,7 @@ namespace basic_test
                         relivant_rectangle = collision_detector[1];
                         y_restricter = relivant_rectangle.Y + relivant_rectangle.Height;
                     }
+                    x_restricter = relivant_rectangle.X;
                 }
                 else
                 {
@@ -176,6 +182,7 @@ namespace basic_test
                     {
                         isrelivant = true;
                         relivant_rectangle = collision_detector[2];
+                        y_restricter = relivant_rectangle.Y;
                     }
                     else if (isgoingup == false)
                     {
@@ -401,8 +408,8 @@ namespace basic_test
                             }
                         }                        
                     }
-                    
-
+                    if (true)
+                    {
                     if (isgoingleft == true)
                     {
                         relivant_rectangle.Width = relivant_rectangle.X + relivant_rectangle.Width - x_restricter;
@@ -421,6 +428,9 @@ namespace basic_test
                     {
                         relivant_rectangle.Height = y_restricter - relivant_rectangle.Y;
                     }
+                    }
+
+                    
                 }
                 if (isgoingleft == true)
                 {
@@ -515,48 +525,24 @@ namespace basic_test
                     _fallspeed = 0;
                 }
             }
-            int toptile = _player.Top / tileHeight;
-            int bottomtile = _player.Bottom / tileHeight;
-            int lefttile = _player.Left / tileHeight;
-            int righttile = _player.Right / tileHeight;
-
-            if (lefttile < 0)
+            if(false)
             {
-                lefttile = 0;
-            }
-            if (righttile > tileMap.GetLength(1))
-            {
-                righttile = tileMap.GetLength(1);
-            }
-            if (toptile < 0)
-            {
-                toptile = 0;
-            }
-            if (bottomtile > tileMap.GetLength(0))
-            {
-                bottomtile = tileMap.GetLength(0);
+                int X = 1;
+                int Y = -1;
+                _collide(ref _player, tileHeight, tileMap, ref X, ref Y, iscoliding);
+                X = 1;
+                Y = 1;
+                _collide(ref _player, tileHeight, tileMap, ref X, ref Y, iscoliding);
+                X = -1;
+                Y = -1;
+                _collide(ref _player, tileHeight, tileMap, ref X, ref Y, iscoliding);
+                X = -1;
+                Y = 1;
+                _collide(ref _player, tileHeight, tileMap, ref X, ref Y, iscoliding);
             }
 
-            if (tileMap[bottomtile + 1, lefttile] == 0
-                && tileMap[bottomtile + 1, righttile] == 0)
-            {
-                iscoliding[3] = false;
-            }
-            if (tileMap[toptile - 1, lefttile] == 0
-                && tileMap[toptile - 1, righttile] == 0)
-            {
-                iscoliding[2] = false;
-            }
-            if (tileMap[bottomtile, lefttile - 1] == 0
-                && tileMap[toptile, lefttile - 1] == 0)
-            {
-                iscoliding[0] = false;
-            }
-            if (tileMap[bottomtile, righttile + 1] == 0
-                && tileMap[toptile, righttile + 1] == 0)
-            {
-                iscoliding[1] = false;
-            }
+
+
             if (_player.Height > 192)
             {
                 _player.Height -= 4;
@@ -702,10 +688,7 @@ namespace basic_test
             {
                 _fallspeed -= jumpspeed;
                 _timetilljumpslowdown = 0;
-                _player.Height += jumpspeed * 2;
-                _player.Y -= jumpspeed * 2;
-                _player.Width -= jumpspeed;
-                _player.X += jumpspeed / 2;
+                //_Squish(jumpspeed, jumpspeed * 2, ref _player);
                 iscoliding[3] = false;
                 if (Keyboard.GetState().IsKeyDown(Keys.D))
                 {
@@ -756,7 +739,7 @@ namespace basic_test
                 _fallspeed += gravspeed;
                 _timesincelastjumpslowdown = 0;
             }
-#endregion
+            #endregion
             #region FRICTION
             if (is_crouching == true)
             {
