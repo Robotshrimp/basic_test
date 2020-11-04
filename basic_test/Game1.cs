@@ -12,26 +12,18 @@ namespace basic_test
     public class Game1 : Game
     {
         int[,] tileMap;
-        
-        int tileWidth = 96;
-        int tileHeight = 96;
+
+        int tilesize = 96;
         bool is_crouching = false;
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         private Texture2D Player;
         private Texture2D level;
-        public Rectangle _player = new Rectangle(1440, 1056, 160, 80);
-        private Rectangle level_rec = new Rectangle(0, 0, 0, 0);//(0, 300, 1024, 1024);
-        private int _fallspeed = -30;
+        public Rectangle _player = new Rectangle(1400, 1056, 160, 80);
+        private int _fallspeed = 0;
         private int _notrightspeed = -50;
-        
-        private double _timesincelastacc = 0;
-        private double _timesincelastfric = 0;
-        private double _timesincelastmove = 0;
-        private double _timesincelastairrescheck = 0;
-        private double _timesincelastfallacc = 0;
-        private double _timetilljumpslowdown = 0;
-        private double _timesincelastjumpslowdown = 0;
+        bool fit = false;
+        bool debug = false;
             //movement variables
         //horozontal
         private int speed = 4;
@@ -42,19 +34,37 @@ namespace basic_test
         private int fallcap2 = 40;
         private int drag = 3;
         private int gravspeed = 10;
-        private int jumpspeed = 15;
+        private int jumpspeed = 30;
         private bool autojustpreventer = false;
         //timer variables
-        //vertical
+        
+        //horozontal
+
         private double accdelay = 0.1;
+        private double _timesincelastacc = 0;
+
         private double fricdelay = 0;
-        private double jumpslowdowndelay = 0.10;
-        private double jumpvariation = 0.30;
+        private double _timesincelastfric = 0;
+
         //vertical
+
+        private double jumpslowdowndelay = 0.10;
+        private double _timesincelastjumpslowdown = 0;
+
+        private double jumpvariation = 0.30;
+        private double _timetilljumpslowdown = 0;
+
         private double falldelay = 0.05;
+        private double _timesincelastfallacc = 0;
+
         private double airresdelay = 0.01;
+        private double _timesincelastairrescheck = 0;
+
         //main movement
+
         private double movedelay = 0;
+        private double _timesincelastmove = 0;
+
         private bool[] iscoliding =
         {
             false,
@@ -96,27 +106,26 @@ namespace basic_test
             _player.Height = 160;
             tileMap = new int[,]
             {
-                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-                {1,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1},
-                {1,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1},
-                {1,1,1,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1},
-                {1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1},
-                {1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,1,1,1,1},
-                {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,1,1,1,1,1},
-                {1,1,1,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1},
-                {1,1,1,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1,1,1},
-                {1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1},
-                {1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1},
-                {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1},
-                {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1},
-                {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,1},
-                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}
+                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+                {1,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,1},
+                {1,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,1},
+                {1,1,1,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,1},
+                {1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,1},
+                {1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,1},
+                {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,1,1},
+                {1,1,1,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1},
+                {1,1,1,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1},
+                {1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+
             };
             
         }
-        #region x check
+        #region slope check
         static public void f_slope_check(
             int till_rec_dif,
             int tilesize,
@@ -170,7 +179,7 @@ namespace basic_test
             {
                 new Rectangle(player.X - affected_varx, player.Y + affected_vary,  player.Width + affected_varx, player.Height - affected_vary),
                 new Rectangle(player.X - affected_varx, player.Y, player.Width + affected_varx, player.Height + affected_vary),
-                new Rectangle(player.X, player.Y + affected_vary, player.Width - affected_varx, player.Height - affected_vary),
+                new Rectangle(player.X, player.Y - affected_vary, player.Width - affected_varx, player.Height - affected_vary),
                 new Rectangle(player.X, player.Y,  player.Width - affected_varx, player.Height + affected_vary)
             };
             Rectangle relivant_rectangle = new Rectangle();
@@ -187,9 +196,9 @@ namespace basic_test
                 isgoingleft = false;
             }
             if (affected_vary > 0)
-                {
-                    isgoingup = false;
-                }
+            {
+                isgoingup = false;
+            }
             if (affected_vary != 0
                 | affected_varx != 0)
             {
@@ -261,10 +270,10 @@ namespace basic_test
                     {
                         right_tile -= 1;
                     }
-
                     double slope = 0;
 
-                    if (affected_varx != 0)
+                    if (affected_varx != 0
+                        && affected_vary != 0)
                     {
                         slope = (0.0 - (double)affected_vary) / (double)affected_varx;
                     }
@@ -285,11 +294,9 @@ namespace basic_test
                                                 tile_check.Y - relivant_rectangle.Y, 
                                                 tile_size, 
                                                 (tile_check.X + tile_size - relivant_rectangle.X) * slope, 
-                                                0, 
-                                                player.Height, 
+                                                0, player.Height, 
                                                 mapOfTiles[y, x + 1], 
-                                                ref x_restricter, 
-                                                ref side_touching_wall[0], 
+                                                ref x_restricter, ref side_touching_wall[0], 
                                                 x_restricter < tile_check.X + tile_size, 
                                                 tile_check.X + tile_size);                                            
                                         }
@@ -301,21 +308,19 @@ namespace basic_test
                                                 f_slope_check(
                                                     tile_check.X - relivant_rectangle.X,
                                                     tile_size,
-                                                    (tile_check.Y + tile_size - relivant_rectangle.Y) / slope,
-                                                    0,
-                                                    player.Width,
+                                                    (tile_check.Y + tile_size - relivant_rectangle.Y) / slope, 
+                                                    0, player.Width,
                                                     mapOfTiles[y + 1, x],
-                                                    ref y_restricter,
-                                                    ref side_touching_wall[2],
+                                                    ref y_restricter, ref side_touching_wall[2],
                                                     y_restricter < tile_check.Y + tile_size,
                                                     tile_check.Y + tile_size);
                                             }
                                         }
                                         if (affected_varx == 0)
-                                        {
-                                            if (mapOfTiles[y + 1, x] != 1)
+                                        {                                            
+                                            if (tile_check.Y + tile_size - relivant_rectangle.Y <= -affected_vary)
                                             {
-                                                if (tile_check.Y + tile_size - relivant_rectangle.Y <= -affected_vary)
+                                                if (mapOfTiles[y + 1, x] != 1)
                                                 {
                                                     if (y_restricter < tile_check.Y + tile_size)
                                                     {
@@ -323,7 +328,7 @@ namespace basic_test
                                                         side_touching_wall[2] = true;
                                                     }
                                                 }
-                                            }
+                                            }                                            
                                         }
                                     }
                                     else
@@ -334,11 +339,9 @@ namespace basic_test
                                                 tile_check.Y - relivant_rectangle.Y,
                                                 tile_size,
                                                 relivant_rectangle.Height + (tile_check.X + tile_size - relivant_rectangle.X) * slope,
-                                                player.Height,
-                                                0,
+                                                player.Height, 0,
                                                 mapOfTiles[y, x + 1],
-                                                ref x_restricter,
-                                                ref side_touching_wall[0],
+                                                ref x_restricter, ref side_touching_wall[0],
                                                 x_restricter < tile_check.X + tile_size,
                                                 tile_check.X + tile_size);
                                         }
@@ -351,12 +354,10 @@ namespace basic_test
                                                 f_slope_check(
                                                     tile_check.X - relivant_rectangle.X,
                                                     tile_size,
-                                                    (relivant_rectangle.Y + relivant_rectangle.Height - tile_check.Y) / -slope,
-                                                    0,
-                                                    player.Width,
+                                                    (relivant_rectangle.Y + relivant_rectangle.Height - tile_check.Y) / -slope, 
+                                                    0, player.Width,
                                                     mapOfTiles[y - 1, x],
-                                                    ref y_restricter,
-                                                    ref side_touching_wall[3],
+                                                    ref y_restricter, ref side_touching_wall[3],
                                                     y_restricter > tile_check.Y,
                                                     tile_check.Y);
                                             }
@@ -387,12 +388,10 @@ namespace basic_test
                                             f_slope_check(
                                                 tile_check.Y - relivant_rectangle.Y,
                                                 tile_size,
-                                                (relivant_rectangle.X + relivant_rectangle.Width - tile_check.X) * slope,
-                                                0,
-                                                player.Height,
+                                                (relivant_rectangle.X + relivant_rectangle.Width - tile_check.X) * slope, 
+                                                0, player.Height,
                                                 mapOfTiles[y, x - 1],
-                                                ref x_restricter,
-                                                ref side_touching_wall[1],
+                                                ref x_restricter, ref side_touching_wall[1],
                                                 x_restricter > tile_check.X,
                                                 tile_check.X);
                                         }
@@ -403,12 +402,10 @@ namespace basic_test
                                                 f_slope_check(
                                                     tile_check.X - relivant_rectangle.X,
                                                     tile_size,
-                                                    relivant_rectangle.Width + (tile_check.Y + tile_size - relivant_rectangle.Y) / slope,
-                                                    player.Width,
-                                                    0,
+                                                    relivant_rectangle.Width - (tile_check.Y + tile_size - relivant_rectangle.Y) / slope,
+                                                    player.Width, 0,
                                                     mapOfTiles[y + 1, x],
-                                                    ref y_restricter,
-                                                    ref side_touching_wall[2],
+                                                    ref y_restricter, ref side_touching_wall[2],
                                                     y_restricter < tile_check.Y + tile_size,
                                                     tile_check.Y + tile_size);
                                             }
@@ -422,11 +419,9 @@ namespace basic_test
                                                 (tile_check.Y - relivant_rectangle.Y),
                                                 tile_size,
                                                 (relivant_rectangle.Height - (relivant_rectangle.X + relivant_rectangle.Width - tile_check.X) * slope),
-                                                player.Height,
-                                                0,
+                                                player.Height, 0,
                                                 mapOfTiles[y, x - 1],
-                                                ref x_restricter,
-                                                ref side_touching_wall[1],
+                                                ref x_restricter, ref side_touching_wall[1],
                                                 x_restricter > tile_check.X,
                                                 tile_check.X);
                                         }
@@ -438,11 +433,9 @@ namespace basic_test
                                                     tile_check.X - relivant_rectangle.X,
                                                     tile_size,
                                                     relivant_rectangle.Width - (relivant_rectangle.Y + relivant_rectangle.Height - tile_check.Y) / slope,
-                                                    player.Width,
-                                                    0,
+                                                    player.Width, 0,
                                                     mapOfTiles[y - 1, x],
-                                                    ref y_restricter,
-                                                    ref side_touching_wall[3],
+                                                    ref y_restricter, ref side_touching_wall[3],
                                                     y_restricter > tile_check.Y,
                                                     tile_check.Y);
                                             }
@@ -511,7 +504,15 @@ namespace basic_test
             }            
         }
         #endregion
-        
+        static public void camera_move(
+            ref Rectangle level,
+            int layer
+            )
+        {
+
+        }
+
+
         /// <summary>
         /// LoadContent will be called once per game and is the place to load
         /// all of your content.play
@@ -521,7 +522,7 @@ namespace basic_test
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
             Player = Content.Load<Texture2D>("BasicShape");
-            level = Content.Load<Texture2D>("test_level");
+            level = Content.Load<Texture2D>("test_level.v2");
             // TODO: use this.Content to load your game content here
         }
         
@@ -554,7 +555,7 @@ namespace basic_test
             
             if (_timesincelastmove >= movedelay)
             {
-                _collide(ref _player, tileHeight, tileMap, ref _notrightspeed, ref _fallspeed, iscoliding);   
+                _collide(ref _player, tilesize, tileMap, ref _notrightspeed, ref _fallspeed, iscoliding);   
                 _player.X -= _notrightspeed;
                 _player.Y += _fallspeed;
                 _timesincelastmove = 0;
@@ -578,16 +579,16 @@ namespace basic_test
                 aircheck[3] = false;
                 int X = 1;
                 int Y = -1;
-                _collide(ref _player, tileHeight, tileMap, ref X, ref Y, aircheck);
+                _collide(ref _player, tilesize, tileMap, ref X, ref Y, aircheck);
                 X = 1;
                 Y = 1;
-                _collide(ref _player, tileHeight, tileMap, ref X, ref Y, aircheck);
+                _collide(ref _player, tilesize, tileMap, ref X, ref Y, aircheck);
                 X = -1;
                 Y = -1;
-                _collide(ref _player, tileHeight, tileMap, ref X, ref Y, aircheck);
+                _collide(ref _player, tilesize, tileMap, ref X, ref Y, aircheck);
                 X = -1;
                 Y = 1;
-                _collide(ref _player, tileHeight, tileMap, ref X, ref Y, aircheck);
+                _collide(ref _player, tilesize, tileMap, ref X, ref Y, aircheck);
                 iscoliding[0] = aircheck[0];
                 iscoliding[1] = aircheck[1];
                 iscoliding[2] = aircheck[2];
@@ -634,7 +635,7 @@ namespace basic_test
                 is_crouching = false;
             }
 
-            #region COLLISION
+            #region COLLISION redundent
             /*
             if (_player.Bottom > 2000)
             {
@@ -849,14 +850,38 @@ namespace basic_test
                 }
             }
             #endregion
-            
-            //--------------------------------------------//
-            //                                            //
-            //               JUMP PREVENTER               //
-            //                                            //
-            //--------------------------------------------//
-            
-
+            if (Keyboard.GetState().IsKeyDown(Keys.Tab))
+            {
+                if (debug == true)
+                {
+                    debug = false;
+                }
+                if (debug == false)
+                {
+                    debug = true;
+                }
+            }
+            if (true)
+            {
+                const double height_to_width = 1.7777777778;
+                const double width_to_height = 0.5625;
+                if (tileMap.GetLength(0) * height_to_width >= tileMap.GetLength(1)
+                    & fit == false)
+                {
+                    graphics.PreferredBackBufferHeight = tileMap.GetLength(0) * tilesize;
+                    graphics.PreferredBackBufferWidth = (int)(graphics.PreferredBackBufferHeight * height_to_width);
+                    graphics.ApplyChanges();
+                }
+                else if (tileMap.GetLength(0) * height_to_width < tileMap.GetLength(1) * tilesize
+                    & fit == false)
+                {
+                    graphics.PreferredBackBufferWidth = tileMap.GetLength(1) * tilesize;
+                    graphics.PreferredBackBufferHeight = (int)(graphics.PreferredBackBufferWidth * width_to_height);
+                    graphics.ApplyChanges();
+                }
+                fit = true;
+                graphics.IsFullScreen = true;
+            }
             
 
             // TODO: Add your update logic here
@@ -894,22 +919,20 @@ namespace basic_test
 
             #endregion
             spriteBatch.Draw(Player, _player, Color.Black);
-            spriteBatch.Draw(level, new Rectangle(0, 0, (tileMap.GetLength(1) - 3) * tileHeight, (tileMap.GetLength(0) - 2) * tileHeight), Color.White);
-            //spriteBatch.Draw(Player, level_rec, Color.Black);
-            if (false)
+            spriteBatch.Draw(level, new Rectangle(0, 0, tileMap.GetLength(1) * tilesize, tileMap.GetLength(0) * tilesize), Color.White);
+            SpriteFont font;
+            font = Content.Load<SpriteFont>("bruh");
+            if (debug)
             {
-                for (int y = 0; y < tileMap.GetLength(0); y++)
-                {
-                    for (int x = 0; x < tileMap.GetLength(1); x++)
-                    {
-
-                        spriteBatch.Draw(
-                            Player,
-                            new Vector2(x * tileWidth, y * tileHeight),
-                            Color.Black);
-                    }
-                }
+                spriteBatch.DrawString(font, "x" + _player.X + "Y" + (_player.Y + _player.Height), new Vector2(100, 100), Color.Black);
+                spriteBatch.DrawString(font, "bot" + iscoliding[3] + "top" + iscoliding[2], new Vector2(100, 120), Color.Black);
+                spriteBatch.DrawString(font, "lef" + iscoliding[0] + "rit" + iscoliding[1], new Vector2(100, 140), Color.Black);
+                spriteBatch.DrawString(font, "x-speed" + _notrightspeed + "Y-speed" + _fallspeed, new Vector2(100, 160), Color.Black);
             }
+
+            //spriteBatch.Draw(Player, level_rec, Color.Black);
+
+
             spriteBatch.End();
 
             // TODO: Add your drawing code here
