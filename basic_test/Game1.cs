@@ -402,7 +402,7 @@ namespace basic_test
                                                 f_slope_check(
                                                     tile_check.X - relivant_rectangle.X,
                                                     tile_size,
-                                                    relivant_rectangle.Width - (tile_check.Y + tile_size - relivant_rectangle.Y) / slope,
+                                                    relivant_rectangle.Width + (tile_check.Y + tile_size - relivant_rectangle.Y) / slope,
                                                     player.Width, 0,
                                                     mapOfTiles[y + 1, x],
                                                     ref y_restricter, ref side_touching_wall[2],
