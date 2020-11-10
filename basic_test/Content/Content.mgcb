@@ -32,7 +32,7 @@
 /processorParam:TextureFormat=Color
 /build:F:/Users/jack/OneDrive/Pictures/Saved Pictures/BasicShape.png;BasicShape.png
 
-#begin F:/Users/jack/OneDrive/Pictures/Saved Pictures/test_level.png
+#begin not green.v3.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -42,29 +42,5 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:F:/Users/jack/OneDrive/Pictures/Saved Pictures/test_level.png;test_level.png
-
-#begin level_test.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:level_test.png
-
-#begin test_level.v2.png
-/importer:TextureImporter
-/processor:TextureProcessor
-/processorParam:ColorKeyColor=255,0,255,255
-/processorParam:ColorKeyEnabled=True
-/processorParam:GenerateMipmaps=False
-/processorParam:PremultiplyAlpha=True
-/processorParam:ResizeToPowerOfTwo=False
-/processorParam:MakeSquare=False
-/processorParam:TextureFormat=Color
-/build:test_level.v2.png
+/build:not green.v3.png
 

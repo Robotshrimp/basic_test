@@ -61,6 +61,8 @@ namespace basic_test
         private double airresdelay = 0.01;
         private double _timesincelastairrescheck = 0;
 
+        bool wall_climb = false;
+
         //main movement
 
         private double movedelay = 0;
@@ -118,7 +120,7 @@ namespace basic_test
                 {1,1,1,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1},
                 {1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1},
                 {1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1},
-                {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1},
                 {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1},
                 {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1},
                 {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -244,7 +246,6 @@ namespace basic_test
             int bottom_tile = relivant_rectangle.Bottom / tile_size;
             if (isrelivant == true)
             {
-
                 for (int b = 1; b <= 2; b++)
                 {
                     #region relivant tiles
@@ -535,7 +536,7 @@ namespace basic_test
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
             Player = Content.Load<Texture2D>("BasicShape");
-            level = Content.Load<Texture2D>("test_level.v2");
+            level = Content.Load<Texture2D>("not green.v3");
             // TODO: use this.Content to load your game content here
         }
         
@@ -707,7 +708,8 @@ namespace basic_test
             #region HOROZONTAL MOVEMENT
             if (_timesincelastacc > accdelay)
             {
-                if (is_crouching == false)
+                if (is_crouching == false
+                    & wall_climb == false)
                 {
                     if (Keyboard.GetState().IsKeyDown(Keys.D)
                     & (_notrightspeed > -speedcap)
@@ -747,16 +749,35 @@ namespace basic_test
                 }
                 autojustpreventer = true;
             }
+            if (wall_climb == true
+                & Keyboard.GetState().IsKeyDown(Keys.Space)
+                & autojustpreventer == false)
+            {
+                _fallspeed -= jumpspeed;
+                _timetilljumpslowdown = 0;
+                wall_climb = false;
+                if (iscoliding[0])
+                {
+                    _notrightspeed -= 18;
+                }
+                if (iscoliding[1])
+                {
+                    _notrightspeed += 18;
+                }
+                autojustpreventer = true;
+            }
             if (!Keyboard.GetState().IsKeyDown(Keys.Space))
             {
                 autojustpreventer = false;
             }
+
             #endregion
             #region GRAVITY
             if (iscoliding[3] == false 
                 & _fallspeed >= -4 
                 & _fallspeed < fallcap1
-                & _timesincelastfallacc >= falldelay)
+                & _timesincelastfallacc >= falldelay
+                & wall_climb == false)
             {
                 _fallspeed += gravspeed;
                 _timesincelastfallacc = 0;
@@ -765,7 +786,8 @@ namespace basic_test
                 & _fallspeed >= -4
                 & _fallspeed < fallcap2
                 & _timesincelastfallacc >= falldelay
-                & iscoliding[3] == false)
+                & iscoliding[3] == false
+                & wall_climb == false)
             {
                 _fallspeed += gravspeed;
                 _timesincelastfallacc = 0;
@@ -863,6 +885,23 @@ namespace basic_test
                 }
             }
             #endregion
+            #region wall climb
+            if (Keyboard.GetState().IsKeyDown(Keys.LeftShift)
+                & !iscoliding [3]
+                & (iscoliding[1]
+                || iscoliding[0]))
+            {
+                wall_climb = true;
+                if (_fallspeed > 0)
+                {
+                    _fallspeed -= friction;
+                }
+            }
+            else
+            {
+                wall_climb = false;
+            }
+            #endregion
             if (Keyboard.GetState().IsKeyDown(Keys.Tab))
             {
                 if (debug == true)
@@ -874,7 +913,7 @@ namespace basic_test
                     debug = true;
                 }
             }
-            if (true)
+            if (false)
             {
                 const double height_to_width = 1.7777777778;
                 const double width_to_height = 0.5625;
@@ -925,22 +964,23 @@ namespace basic_test
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
             
             spriteBatch.Begin();
             #region
 
             #endregion
-            spriteBatch.Draw(Player, _player, Color.Black);
-            spriteBatch.Draw(level, new Rectangle(0, 0, tileMap.GetLength(1) * tilesize, tileMap.GetLength(0) * tilesize), Color.White);
+            
+            spriteBatch.Draw(level, new Rectangle((graphics.PreferredBackBufferWidth - tileMap.GetLength(1) * tilesize) / 2, (graphics.PreferredBackBufferHeight - tileMap.GetLength(0) * tilesize) / 2, tileMap.GetLength(1) * tilesize, tileMap.GetLength(0) * tilesize), Color.White);
+            spriteBatch.Draw(Player, new Rectangle(_player.X + (graphics.PreferredBackBufferWidth - tileMap.GetLength(1) * tilesize) / 2, _player.Y + (graphics.PreferredBackBufferHeight - tileMap.GetLength(0) * tilesize) / 2, _player.Width, _player.Height), Color.White);
             SpriteFont font;
             font = Content.Load<SpriteFont>("bruh");
             if (debug)
             {
-                spriteBatch.DrawString(font, "x :" + _player.X + "  Y :" + (_player.Y + _player.Height), new Vector2(100, 100), Color.Black);
-                spriteBatch.DrawString(font, "bot :" + iscoliding[3] + "  top :" + iscoliding[2], new Vector2(100, 120), Color.Black);
-                spriteBatch.DrawString(font, "lef :" + iscoliding[0] + "  rit :" + iscoliding[1], new Vector2(100, 140), Color.Black);
-                spriteBatch.DrawString(font, "x-speed :" + _notrightspeed + "  Y-speed :" + _fallspeed, new Vector2(100, 160), Color.Black);
+                spriteBatch.DrawString(font, "x :" + _player.X + "  Y :" + (_player.Y + _player.Height), new Vector2(100, 100), Color.White);
+                spriteBatch.DrawString(font, "bot :" + iscoliding[3] + "  top :" + iscoliding[2], new Vector2(100, 120), Color.White);
+                spriteBatch.DrawString(font, "lef :" + iscoliding[0] + "  rit :" + iscoliding[1], new Vector2(100, 140), Color.White);
+                spriteBatch.DrawString(font, "x-speed :" + _notrightspeed + "  Y-speed :" + _fallspeed, new Vector2(100, 160), Color.White);
             }
 
             //spriteBatch.Draw(Player, level_rec, Color.Black);
