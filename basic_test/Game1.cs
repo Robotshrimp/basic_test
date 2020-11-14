@@ -24,18 +24,22 @@ namespace basic_test
         private int _notrightspeed = -50;
         bool fit = false;
         bool debug = false;
-            //movement variables
+        int prefered_width = 80;
+        int prefered_height = 160;
+        //movement variables
         //horozontal
-        private int speed = 1;
+        private int speed = 2;
         private int friction = 5;
-        private int speedcap = 12;
+        private int speedcap = 15;
         //vertical
-        private int fallcap1 = 25;
+        private int fallcap1 = 30;
         private int fallcap2 = 40;
         private int drag = 1;
-        private int gravspeed = 5;
-        private int jumpspeed = 15;
+        private int gravspeed = 3;
+        private int jumpspeed = 20;
         private bool autojustpreventer = false;
+        int climb_speed = -7;
+        int slip_speed = 10;
         //timer variables
         
         //horozontal
@@ -48,14 +52,14 @@ namespace basic_test
 
         //vertical
 
-        private double jumpslowdowndelay = 0.05;
+        private double jumpslowdowndelay = 0;
         private double _timesincelastjumpslowdown = 0;
 
-        private double jumpvariation_upper = 0.28;
+        private double jumpvariation_upper = 0.2;
         private double jumpvariation_lower = 0.10;
         private double _timetilljumpslowdown = 0;
 
-        private double falldelay = 0.03;
+        private double falldelay = 0;
         private double _timesincelastfallacc = 0;
 
         private double airresdelay = 0.01;
@@ -109,21 +113,26 @@ namespace basic_test
             _player.Height = 160;
             tileMap = new int[,]
             {
-                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-                {1,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,1},
-                {1,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,1},
-                {1,1,1,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,1},
-                {1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,1},
-                {1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,1},
-                {1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,1,1},
-                {1,1,1,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1},
-                {1,1,1,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1},
-                {1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1},
-                {1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1},
-                {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1},
-                {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1},
-                {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1},
-                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+                {1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1},
+                {1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1},
+                {1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1},
+                {1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1},
+                {1,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1},
+                {1,0,0,0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,1},
+                {1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0,0,1},
+                {1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,1},
+                {1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,1},
+                {1,1,1,1,0,0,0,0,0,0,0,0,1,1,1,1,1,0,0,0,1,1,1},
+                {1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1},
+                {1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,0,0,0,0,0,1,1,1},
+                {1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,1,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,1,1,1,1,1,1},
+                {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
 
             };
             
@@ -573,6 +582,30 @@ namespace basic_test
                 _player.X -= _notrightspeed;
                 _player.Y += _fallspeed;
                 _timesincelastmove = 0;
+                if (true)
+                {
+                    aircheck[0] = false;
+                    aircheck[1] = false;
+                    aircheck[2] = false;
+                    aircheck[3] = false;
+                    int X = 1;
+                    int Y = -1;
+                    _collide(ref _player, tilesize, tileMap, ref X, ref Y, aircheck);
+                    X = 1;
+                    Y = 1;
+                    _collide(ref _player, tilesize, tileMap, ref X, ref Y, aircheck);
+                    X = -1;
+                    Y = -1;
+                    _collide(ref _player, tilesize, tileMap, ref X, ref Y, aircheck);
+                    X = -1;
+                    Y = 1;
+                    _collide(ref _player, tilesize, tileMap, ref X, ref Y, aircheck);
+                    iscoliding[0] = aircheck[0];
+                    iscoliding[1] = aircheck[1];
+                    iscoliding[2] = aircheck[2];
+                    iscoliding[3] = aircheck[3];
+                }
+
                 if (iscoliding[0] == true
                 | iscoliding[1] == true)
                 {
@@ -610,15 +643,15 @@ namespace basic_test
             }
             #endregion
             #region squish
-            if (_player.Height > 160)
+            if (_player.Height > prefered_height)
             {
-                _player.Height -= 4;
-                _player.Y += 4;
+                _player.Height -= prefered_height / 40;
+                _player.Y += prefered_height / 40;
             }
-            if (_player.Width < 80)
+            if (_player.Width < prefered_width)
             {
-                _player.Width += 4;
-                _player.X -= 2;
+                _player.Width += prefered_width / 20;
+                _player.X -= prefered_width / 40;
             }
 
             if (Keyboard.GetState().IsKeyDown(Keys.S)
@@ -626,24 +659,23 @@ namespace basic_test
             {
                 if (is_crouching == false)
                 {
-                    _player.X -= (100 - _player.Width)/2 ;
-                    _player.Y += _player.Height - 80;
+                    
+                    _player.Y += _player.Height / 2;
                 }
                 is_crouching = true;
-                _player.Height = 80;
-                _player.Width = 100;
+                _player.Height = prefered_height / 2;
             }
             else
             {
-                if (_player.Height < 160)
+                if (_player.Height < prefered_height)
                 {
-                    _player.Height += 8;
-                    _player.Y -= 8;
+                    _player.Height += prefered_height/20;
+                    _player.Y -= prefered_height / 20;
                 }
-                if (_player.Width > 80)
+                if (_player.Width > prefered_width)
                 {
-                    _player.Width -= 8;
-                    _player.X += 4;
+                    _player.Width -= prefered_width / 10;
+                    _player.X += prefered_width / 20;
                 }
                 is_crouching = false;
             }
@@ -712,6 +744,7 @@ namespace basic_test
                     & wall_climb == false)
                 {
                     if (Keyboard.GetState().IsKeyDown(Keys.D)
+                        & ! Keyboard.GetState().IsKeyDown(Keys.A)
                     & (_notrightspeed > -speedcap)
                     & iscoliding[1] == false)
                     {
@@ -720,6 +753,7 @@ namespace basic_test
                         iscoliding[0] = false;
                     }
                     if (Keyboard.GetState().IsKeyDown(Keys.A)
+                        & !Keyboard.GetState().IsKeyDown(Keys.D)
                     & (_notrightspeed < speedcap)
                     & iscoliding[0] == false)
                     {
@@ -753,16 +787,40 @@ namespace basic_test
                 & Keyboard.GetState().IsKeyDown(Keys.Space)
                 & autojustpreventer == false)
             {
-                _fallspeed -= jumpspeed;
+                _fallspeed -= (int)(jumpspeed * 0.75);
                 _timetilljumpslowdown = 0;
                 wall_climb = false;
                 if (iscoliding[0])
                 {
-                    _notrightspeed -= 18;
+                    _notrightspeed -= (int)(jumpspeed * 0.8);
                 }
                 if (iscoliding[1])
                 {
-                    _notrightspeed += 18;
+                    _notrightspeed += (int)(jumpspeed * 0.8);
+                }
+                if (iscoliding[0]
+                    & Keyboard.GetState().IsKeyDown(Keys.A)
+                    & !Keyboard.GetState().IsKeyDown(Keys.D))
+                {
+                    _notrightspeed += (int)(jumpspeed * 0.4);
+                }
+                if (iscoliding[1]
+                    & Keyboard.GetState().IsKeyDown(Keys.D)
+                    & !Keyboard.GetState().IsKeyDown(Keys.A))
+                {
+                    _notrightspeed -= (int)(jumpspeed * 0.4);
+                }
+                if (iscoliding[0]
+                    & Keyboard.GetState().IsKeyDown(Keys.D)
+                    & !Keyboard.GetState().IsKeyDown(Keys.A))
+                {
+                    _notrightspeed -= (int)(jumpspeed * 0.4);
+                }
+                if (iscoliding[1]
+                    & Keyboard.GetState().IsKeyDown(Keys.A)
+                    & !Keyboard.GetState().IsKeyDown(Keys.D))
+                {
+                    _notrightspeed += (int)(jumpspeed * 0.4);
                 }
                 autojustpreventer = true;
             }
@@ -887,19 +945,28 @@ namespace basic_test
             #endregion
             #region wall climb
             if (Keyboard.GetState().IsKeyDown(Keys.LeftShift)
-                & !iscoliding [3]
                 & (iscoliding[1]
                 || iscoliding[0]))
             {
                 wall_climb = true;
                 if (_fallspeed > 0)
                 {
-                    _fallspeed -= friction;
+                    _fallspeed = 0;
                 }
             }
             else
             {
                 wall_climb = false;
+            }
+            if(wall_climb == true
+                & Keyboard.GetState().IsKeyDown(Keys.W))
+            {
+                _fallspeed = climb_speed;
+            }
+            if (wall_climb == true
+                & Keyboard.GetState().IsKeyDown(Keys.S))
+            {
+                _fallspeed = slip_speed;
             }
             #endregion
             if (Keyboard.GetState().IsKeyDown(Keys.Tab))
@@ -917,22 +984,26 @@ namespace basic_test
             {
                 const double height_to_width = 1.7777777778;
                 const double width_to_height = 0.5625;
-                if (tileMap.GetLength(0) * height_to_width <= tileMap.GetLength(1)
+                if ((tileMap.GetLength(0) - 5) * height_to_width <= tileMap.GetLength(1) - 2
                     & fit == false)
                 {
-                    graphics.PreferredBackBufferHeight = tileMap.GetLength(0) * tilesize;
-                    graphics.PreferredBackBufferWidth = (int)(graphics.PreferredBackBufferHeight * height_to_width);
-                    graphics.ApplyChanges();
+                    tilesize = graphics.PreferredBackBufferHeight / (tileMap.GetLength(0) - 5);
+                    _player.Height = (int)((double)tilesize / 96 * 80 * 2);
+                    _player.Width = (int)((double)tilesize / 96 * 80);
                 }
-                else if (tileMap.GetLength(0) * height_to_width > tileMap.GetLength(1)
-                    & fit == false)
+                else if ((tileMap.GetLength(0) - 5) * height_to_width > tileMap.GetLength(1) - 2
+                        & fit == false)
                 {
-                    graphics.PreferredBackBufferWidth = tileMap.GetLength(1) * tilesize;
-                    graphics.PreferredBackBufferHeight = (int)(graphics.PreferredBackBufferWidth * width_to_height);
-                    graphics.ApplyChanges();
+                    tilesize = graphics.PreferredBackBufferWidth / (tileMap.GetLength(1) - 2);
+                    _player.Height = (int)((double)tilesize / 96 * 80 * 2);
+                    _player.Width = (int)((double)tilesize / 96 * 80);
                 }
                 fit = true;
                 graphics.IsFullScreen = true;
+                
+                prefered_width = (int)((double)tilesize / 96 * 80);
+                prefered_height = (int)((double)tilesize / 96 * 80 * 2);
+
             }
             
 
@@ -941,7 +1012,7 @@ namespace basic_test
             base.Update(gameTime);
             //--------------------------------------------//
             //                                            //
-            //                   TIMERS                   //
+            //                   TIMERS                   //    
             //                                            //
             //--------------------------------------------//
             _timesincelastacc += gameTime.ElapsedGameTime.TotalSeconds;
@@ -971,16 +1042,17 @@ namespace basic_test
 
             #endregion
             
-            spriteBatch.Draw(level, new Rectangle((graphics.PreferredBackBufferWidth - tileMap.GetLength(1) * tilesize) / 2, (graphics.PreferredBackBufferHeight - tileMap.GetLength(0) * tilesize) / 2, tileMap.GetLength(1) * tilesize, tileMap.GetLength(0) * tilesize), Color.White);
-            spriteBatch.Draw(Player, new Rectangle(_player.X + (graphics.PreferredBackBufferWidth - tileMap.GetLength(1) * tilesize) / 2, _player.Y + (graphics.PreferredBackBufferHeight - tileMap.GetLength(0) * tilesize) / 2, _player.Width, _player.Height), Color.White);
+            spriteBatch.Draw(level, new Rectangle((graphics.PreferredBackBufferWidth - (tileMap.GetLength(1)-2) * tilesize) / 2, graphics.PreferredBackBufferHeight - (tileMap.GetLength(0)-5) * tilesize, (tileMap.GetLength(1) - 2) * tilesize, (tileMap.GetLength(0) - 5) * tilesize), Color.White);
+            spriteBatch.Draw(Player, new Rectangle(_player.X + (graphics.PreferredBackBufferWidth - tileMap.GetLength(1) * tilesize) / 2, _player.Y + (graphics.PreferredBackBufferHeight - (tileMap.GetLength(0)-1) * tilesize), _player.Width, _player.Height), Color.White);
+            spriteBatch.Draw(Player, new Rectangle((graphics.PreferredBackBufferWidth - (tileMap.GetLength(1) - 2) * tilesize) / 2, graphics.PreferredBackBufferHeight - (tileMap.GetLength(0) - 1) * tilesize, (tileMap.GetLength(1) - 2) * tilesize, tilesize * 4), Color.Black);
             SpriteFont font;
             font = Content.Load<SpriteFont>("bruh");
             if (debug)
             {
-                spriteBatch.DrawString(font, "x :" + _player.X + "  Y :" + (_player.Y + _player.Height), new Vector2(100, 100), Color.White);
-                spriteBatch.DrawString(font, "bot :" + iscoliding[3] + "  top :" + iscoliding[2], new Vector2(100, 120), Color.White);
-                spriteBatch.DrawString(font, "lef :" + iscoliding[0] + "  rit :" + iscoliding[1], new Vector2(100, 140), Color.White);
-                spriteBatch.DrawString(font, "x-speed :" + _notrightspeed + "  Y-speed :" + _fallspeed, new Vector2(100, 160), Color.White);
+                spriteBatch.DrawString(font, "x :" + _player.X + "  Y :" + (_player.Y + _player.Height), new Vector2(50, 50), Color.White);
+                spriteBatch.DrawString(font, "bot :" + iscoliding[3] + "  top :" + iscoliding[2], new Vector2(50, 70), Color.White);
+                spriteBatch.DrawString(font, "lef :" + iscoliding[0] + "  rit :" + iscoliding[1], new Vector2(50, 90), Color.White);
+                spriteBatch.DrawString(font, "x-speed :" + _notrightspeed + "  Y-speed :" + _fallspeed, new Vector2(50, 110), Color.White);
             }
 
             //spriteBatch.Draw(Player, level_rec, Color.Black);
