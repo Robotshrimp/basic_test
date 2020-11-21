@@ -13,14 +13,7 @@
 
 #---------------------------------- Content ---------------------------------#
 
-#begin bruh.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:bruh.spritefont
-
-#begin F:/Users/jack/OneDrive/Pictures/Saved Pictures/BasicShape.png
+#begin BasicShape.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -30,7 +23,14 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:F:/Users/jack/OneDrive/Pictures/Saved Pictures/BasicShape.png;BasicShape.png
+/build:BasicShape.png
+
+#begin bruh.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:bruh.spritefont
 
 #begin not green.v3.png
 /importer:TextureImporter

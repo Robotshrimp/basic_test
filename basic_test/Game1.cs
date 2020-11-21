@@ -11,6 +11,7 @@ namespace basic_test
     /// </summary>
     public class Game1 : Game
     {
+        #region variables
         int[,] tileMap;
         double zoom = 2;
         int tilesize = 96;
@@ -23,7 +24,6 @@ namespace basic_test
         Rectangle r_level = new Rectangle(0,0,0,0);
         private int _fallspeed = -12;
         private int _notrightspeed = -50;
-        bool fit = false;
         bool debug = false;
         int wiggleroom_x = 0;
         int wiggleroom_y = 0;
@@ -94,6 +94,7 @@ namespace basic_test
             false,
             false
         };
+        #endregion
         public Game1()
         
         {
@@ -536,13 +537,6 @@ namespace basic_test
             }
         }
         #endregion
-        static public void camera_move(
-            ref Rectangle level,
-            int layer
-            )
-        {
-
-        }
 
 
         /// <summary>
@@ -586,7 +580,7 @@ namespace basic_test
             //                  MOVEMENT                  //
             //                                            //
             //--------------------------------------------//
-            #region MOVEMENT
+            #region MOVEMENT update
             if (_timesincelastmove >= movedelay)
             {
                 _collide(ref _player, tilesize, tileMap, ref _notrightspeed, ref _fallspeed, iscoliding);   
@@ -661,25 +655,50 @@ namespace basic_test
                 (int)((tileMap.GetLength(0) - 5) * tilesize * zoom));
             if (r_level.Height > graphics.PreferredBackBufferHeight)
             {
-                wiggleroom_y = r_level.Height - graphics.PreferredBackBufferHeight;
+                wiggleroom_y = r_level.Height - graphics.PreferredBackBufferHeight;                
+                if ((int)((r_level.Y - camera_move_y) * zoom) < 0
+                    & camera_move_y > (int)((_player.Y - tilesize * 4 - _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2)
+                {
+                    camera_move_y = (int)((_player.Y - tilesize * 4 - _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2;
+                }
+                if ((int)((r_level.Y - camera_move_y) * zoom) + r_level.Height > graphics.PreferredBackBufferHeight
+                    & camera_move_y < (int)((_player.Y - tilesize * 4 - _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2)
+                {
+                    camera_move_y = (int)((_player.Y - tilesize * 4 - _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2;
+                }
+                if (camera_move_y < 0)
+                {
+                    camera_move_y = 0;
+                } 
+                if (camera_move_y > wiggleroom_y / 2)
+                {
+                    camera_move_y = wiggleroom_y / 2 ;
+                }
             }
             if (r_level.Width > graphics.PreferredBackBufferWidth)
             {
-                wiggleroom_x = r_level.Width - graphics.PreferredBackBufferWidth;
-            }
-            if ((int)((_player.Y  - tilesize * 4) * zoom) + _player.Height / 2 > graphics.PreferredBackBufferHeight / 2
-                & (int)((_player.Y - tilesize * 4) * zoom) + _player.Height / 2 < (graphics.PreferredBackBufferHeight / 2) + wiggleroom_y
-                & r_level.Height > graphics.PreferredBackBufferHeight)
-            {
-                camera_move_y = ((int)((_player.Y - tilesize * 4) ) + _player.Height / 2) - graphics.PreferredBackBufferHeight / 2;
-            }
-            if ((int)((_player.X - tilesize) * zoom) + _player.Width / 2 > graphics.PreferredBackBufferWidth / 2
-                & (int)((_player.X - tilesize) * zoom) + _player.Width / 2 < (graphics.PreferredBackBufferWidth / 2) + wiggleroom_x
-                & r_level.Width > graphics.PreferredBackBufferWidth)
-            {
-                camera_move_x = ((int)((_player.X - tilesize) ) + _player.Width / 2) - graphics.PreferredBackBufferWidth / 2;
+                wiggleroom_x = r_level.Width - graphics.PreferredBackBufferWidth;                
+                if ((int)((r_level.X - camera_move_x) * zoom) < 0
+                    & camera_move_x > (int)((_player.X - tilesize - _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2)
+                {
+                    camera_move_x = (int)((_player.X - tilesize - _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2;
+                }
+                if ((int)((r_level.X - camera_move_x) * zoom) + r_level.Width > graphics.PreferredBackBufferWidth
+                    & camera_move_x < (int)((_player.X - tilesize - _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2)
+                {
+                    camera_move_x = (int)((_player.X - tilesize - _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2;
+                }
+                if (camera_move_x < 0)
+                {
+                    camera_move_x = 0;
+                }
+                if (camera_move_x > wiggleroom_x / 2)
+                {
+                    camera_move_x = wiggleroom_x / 2;
+                }
             }
             #endregion
+            #region movement
             #region squish
             if (Keyboard.GetState().IsKeyDown(Keys.S)
                 & iscoliding[3])
@@ -691,63 +710,6 @@ namespace basic_test
             {                
                 is_crouching = false;
             }
-            #endregion
-            #region COLLISION redundent
-            /*
-            if (_player.Bottom > 2000)
-            {
-                _isgrounded = true;
-                if (_fallspeed > 17)
-                {
-                    _Squish(_fallspeed, _fallspeed * 2, ref _player);
-                }
-                _fallspeed = 0;
-            }
-            else
-            {
-                _isgrounded = false;
-            }
-            if (_player.Intersects(level_rec))
-            {
-                _isgrounded = true;
-                _fallspeed = 0;
-            }
-            /*
-            int left_tile = _player.Left / tileHeight;
-            int right_tile = _player.Right / tileHeight;
-            int top_tile = _player.Top / tileHeight;
-            int bottom_tile = _player.Bottom / tileHeight;
-
-            if (left_tile < 0)
-            {
-                left_tile = 0;
-            }
-            if (right_tile > tileMap.GetLength(1))
-            {
-                right_tile = tileMap.GetLength(1);
-            }
-            if (top_tile < 0)
-            {
-                top_tile = 0;
-            }
-            if (bottom_tile > tileMap.GetLength(0))
-            {
-                bottom_tile = tileMap.GetLength(0);
-            }
-
-            bool any_collision = false;
-            for (int i = left_tile - 1; i <= right_tile; i++)
-            {
-                for (int j = top_tile - 1; j <= bottom_tile; j++)
-                {
-                    if (tileMap[i,j] == 1)
-                    {
-                        any_collision = true;
-
-                    }
-                }
-            }
-            */
             #endregion
             #region HOROZONTAL MOVEMENT
             if (_timesincelastacc > accdelay)
@@ -985,6 +947,8 @@ namespace basic_test
                 _fallspeed = slip_speed;
             }
             #endregion
+            #endregion
+            #region debug
             if (Keyboard.GetState().IsKeyDown(Keys.Tab))
             {
                 if (debug == true)
@@ -996,41 +960,9 @@ namespace basic_test
                     debug = true;
                 }
             }
-            if (false)
-            {
-                const double height_to_width = 1.7777777778;
-                const double width_to_height = 0.5625;
-                if ((tileMap.GetLength(0) - 5) * height_to_width <= tileMap.GetLength(1) - 2
-                    & fit == false)
-                {
-                    tilesize = graphics.PreferredBackBufferHeight / (tileMap.GetLength(0) - 5);
-                    _player.Height = (int)((double)tilesize / 96 * 80 * 2);
-                    _player.Width = (int)((double)tilesize / 96 * 80);
-                }
-                else if ((tileMap.GetLength(0) - 5) * height_to_width > tileMap.GetLength(1) - 2
-                        & fit == false)
-                {
-                    tilesize = graphics.PreferredBackBufferWidth / (tileMap.GetLength(1) - 2);
-                    _player.Height = (int)((double)tilesize / 96 * 80 * 2);
-                    _player.Width = (int)((double)tilesize / 96 * 80);
-                }
-                fit = true;
-                graphics.IsFullScreen = true;
-                
-                prefered_width = (int)((double)tilesize / 96 * 80);
-                prefered_height = (int)((double)tilesize / 96 * 80 * 2);
-
-            }
-            
-
-            // TODO: Add your update logic here
-
+            #endregion
             base.Update(gameTime);
-            //--------------------------------------------//
-            //                                            //
-            //                   TIMERS                   //    
-            //                                            //
-            //--------------------------------------------//
+            #region timers
             _timesincelastacc += gameTime.ElapsedGameTime.TotalSeconds;
             _timesincelastfric += gameTime.ElapsedGameTime.TotalSeconds;
             _timesincelastmove += gameTime.ElapsedGameTime.TotalSeconds;
@@ -1041,8 +973,7 @@ namespace basic_test
             {
                 _timetilljumpslowdown += gameTime.ElapsedGameTime.TotalSeconds;
             }
-            
-            
+            #endregion
         }
 
         /// <summary>
@@ -1078,6 +1009,8 @@ namespace basic_test
                 spriteBatch.DrawString(font, "bot :" + iscoliding[3] + "  top :" + iscoliding[2], new Vector2(50, 70), Color.White);
                 spriteBatch.DrawString(font, "lef :" + iscoliding[0] + "  rit :" + iscoliding[1], new Vector2(50, 90), Color.White);
                 spriteBatch.DrawString(font, "x-speed :" + _notrightspeed + "  Y-speed :" + _fallspeed, new Vector2(50, 110), Color.White);
+                spriteBatch.DrawString(font, "camra_move_x :" + camera_move_x + "  camera_move_y :" + camera_move_y, new Vector2(50, 130), Color.White);
+                spriteBatch.DrawString(font, "temp 1 :" + wiggleroom_x + "  temp 2 :" + wiggleroom_y, new Vector2(50, 150), Color.White);
             }
 
             //spriteBatch.Draw(Player, level_rec, Color.Black);
