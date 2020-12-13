@@ -6,17 +6,19 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-
-namespace basic_test
+public class animation:Game
 {
-    public class animation
+    SpriteBatch spriteBatch;
+    int _frames { get; set; }
+    int _frame_rate { get; set; }
+    int _height { get; set; }
+    int _width { get; set; }
+    Texture2D texture { get; set; }
+    Vector2 position { get; set; }
+    protected override void Update(GameTime gameTime)
     {
-        SpriteBatch spriteBatch;
-        public animation(Texture2D texture, int frame, int frame_height, int frame_width, int frame_rate, Vector2 posiotion)
-        {
-            spriteBatch.Begin();
-            spriteBatch.Draw(texture, posiotion, new Rectangle(frame * frame_width, 0, frame_width, frame_height), Color.White);
-            spriteBatch.End();
-        }
+        int width = texture.Width / _frames;
+
+        base.Update(gameTime);
     }
 }

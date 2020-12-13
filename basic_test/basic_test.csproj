@@ -71,6 +71,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\test sheet.png" />
     <Content Include="Icon.ico" />
   </ItemGroup>
   <ItemGroup>
