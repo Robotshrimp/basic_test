@@ -596,6 +596,10 @@ namespace basic_test
                 {
                     _fallspeed = 0;
                 }
+                if (iscoliding[3] == true)
+                {
+                    _fallspeed = 0;
+                }
                 if (true)
                 {
                     aircheck[0] = false;
@@ -673,17 +677,28 @@ namespace basic_test
                     camera_moveTo_x = wiggleroom_x / 2;
                 }
             }
-            if ((int)((_player.X - tilesize) * zoom - camera_move_x) - (int)(_player.Width * zoom) / 2 < graphics.PreferredBackBufferWidth / 7
-                || (int)((_player.X - tilesize) * zoom - camera_move_x) - (int)(_player.Width * zoom) / 2 > (graphics.PreferredBackBufferWidth / 7) * 4)
+            if (false)
             {
-                camera_move_x += (int)(camera_moveTo_x - camera_move_x) / 8;
+                if (((_player.X - tilesize) * zoom - camera_move_x) - (_player.Width * zoom / 2) < graphics.PreferredBackBufferWidth / 7 * 2)
+                {
+                    camera_move_x += (int)((camera_moveTo_x - camera_move_x) / 8);
+                }
+                if (((_player.X - tilesize) * zoom - camera_move_x) - (_player.Width * zoom / 2) > graphics.PreferredBackBufferWidth / 7 * 4)
+                {
+                    camera_move_x += (int)((camera_moveTo_x - camera_move_x) / 8);
+                }
+                if (((_player.Y) * zoom - camera_move_y) - (_player.Height * zoom) / 2 < graphics.PreferredBackBufferHeight / 7 * 2)
+                {
+                    camera_move_y += (int)((camera_moveTo_y - camera_move_y) / 8);
+                }
+                if (((_player.Y) * zoom - camera_move_y) - (_player.Height * zoom) / 2 > graphics.PreferredBackBufferHeight / 7 * 4)
+                {
+                    camera_move_y += (int)((camera_moveTo_y - camera_move_y) / 8);
+                }
             }
-            if ((int)((_player.Y - tilesize * 4) * zoom - camera_move_y) - (int)(_player.Height * zoom) / 2 < graphics.PreferredBackBufferHeight / 7
-                || (int)((_player.Y - tilesize * 4) * zoom - camera_move_y) - (int)(_player.Height * zoom) / 2 > (graphics.PreferredBackBufferHeight / 7) * 4)
-            {
-                camera_move_y += (int)(camera_moveTo_y - camera_move_y) / 8;
-            }
-            
+            camera_move_y += (int)((camera_moveTo_y - camera_move_y) / 16);
+            camera_move_x += (int)((camera_moveTo_x - camera_move_x) / 16);
+
             #endregion
             #region movement
             #region squish
@@ -1001,7 +1016,7 @@ namespace basic_test
                 spriteBatch.DrawString(font, "lef :" + iscoliding[0] + "  rit :" + iscoliding[1], new Vector2(50, 90), Color.White);
                 spriteBatch.DrawString(font, "x-speed :" + _notrightspeed + "  Y-speed :" + _fallspeed, new Vector2(50, 110), Color.White);
                 spriteBatch.DrawString(font, "camra_move_x :" + camera_move_x + "  camera_move_y :" + camera_move_y, new Vector2(50, 130), Color.White);
-                spriteBatch.DrawString(font, "temp 1 :" + wiggleroom_x + "  temp 2 :" + wiggleroom_y, new Vector2(50, 150), Color.White);
+                spriteBatch.DrawString(font, "temp 1 :" + graphics.PreferredBackBufferWidth / 7 * 2 + "  temp 2 :" + (graphics.PreferredBackBufferWidth / 7 * 4), new Vector2(50, 150), Color.White);
             }
             //spriteBatch.Draw(Player, level_rec, Color.Black);
 
