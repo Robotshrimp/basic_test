@@ -6,19 +6,12 @@ using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-public class animation:Game
+public class level:Game
 {
-    SpriteBatch spriteBatch;
-    int _frames { get; set; }
-    int _frame_rate { get; set; }
-    int _height { get; set; }
-    int _width { get; set; }
-    Texture2D texture { get; set; }
-    Vector2 position { get; set; }
-    protected override void Update(GameTime gameTime)
-    {
-        int width = texture.Width / _frames;
+    int up;
+    int down;
+    int left;
+    int right;
+    Rectangle dimensions;
 
-        base.Update(gameTime);
-    }
 }

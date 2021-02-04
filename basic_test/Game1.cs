@@ -11,6 +11,7 @@ namespace basic_test
     /// </summary>
     public class Game1 : Game
     {
+        
         #region variables
         int[,] tileMap;
         double zoom = 2;
@@ -18,25 +19,40 @@ namespace basic_test
         bool is_crouching = false;
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
+        int mousepos_x;
+        int mousepos_y;
         private Texture2D Player;
         private Texture2D level;
-        private Texture2D batch;
+        private Texture2D pausescreen;
+        private Texture2D pause_text;
+        private Texture2D Menu_text;
+        private Texture2D resume_text;
+        private Texture2D pointer;
+        private Texture2D menu_b;
         public Rectangle _player = new Rectangle(96, 288, 160, 80);
         Rectangle r_level = new Rectangle(0,0,0,0);
         private int _fallspeed = -12;
         private int _notrightspeed = -0;
         bool debug = false;
+        bool is_paused;
+        bool is_in_menu = false;
+        bool escape_is_pressed;
+        bool M_is_pressed;
         int wiggleroom_x = 0;
         int wiggleroom_y = 0;
         int camera_moveTo_x = 0;
         int camera_moveTo_y = 0;
         int camera_move_x = 0;
         int camera_move_y = 0;
+
         //movement variables
+
         //horozontal
+
         private int speed = 5;
         private int friction = 2;
         private int speedcap = 18;
+
         //vertical
        
         private int fallcap1 = 24;
@@ -46,8 +62,9 @@ namespace basic_test
         private int jumpspeed = 20;
         private bool autojustpreventer = false;
 
-        int climb_speed = -9;
-        int slip_speed = 12;
+        int climb_speed = -6;
+        int slip_speed = 8;
+
         //timer variables
 
         //horozontal
@@ -120,7 +137,6 @@ namespace basic_test
             base.Initialize();
             _player.Width = 80;
             _player.Height = 160;
-
             tileMap = new int[,]
             {
                 {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -545,7 +561,15 @@ namespace basic_test
             // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
             Player = Content.Load<Texture2D>("BasicShape");
-            level = Content.Load<Texture2D>("not green.v3");
+            level = Content.Load<Texture2D>("room 1");
+            pausescreen = Content.Load<Texture2D>("menu background");
+            pause_text = Content.Load<Texture2D>("pause text");
+            Menu_text = Content.Load<Texture2D>("menu text");
+            resume_text = Content.Load<Texture2D>("resume text");
+            pointer = Content.Load<Texture2D>("pointer");
+            menu_b = Content.Load<Texture2D>("menu");
+
+
             // TODO: use this.Content to load your game content here
         }
         
@@ -566,421 +590,443 @@ namespace basic_test
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+            MouseState mouseState = Mouse.GetState();
+            mousepos_x = mouseState.X;
+            mousepos_y = mouseState.Y;
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.C))
                 Exit();
-            
-            
+            if (!Keyboard.GetState().IsKeyDown(Keys.Escape))
+                escape_is_pressed = false;
+            if (!Keyboard.GetState().IsKeyDown(Keys.M))
+                M_is_pressed = false;
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape) & escape_is_pressed == false)
+            {
+                if (is_paused == true)
+                    is_paused = false;
+                else
+                    is_paused = true;
+                escape_is_pressed = true;
+            }             
+            if (Keyboard.GetState().IsKeyDown(Keys.M) & M_is_pressed == false)
+            {
+                if (is_in_menu == true)
+                    is_in_menu = false;
+                else
+                    is_in_menu = true;
+                M_is_pressed = true;
+            }
             //--------------------------------------------//
             //                                            //
             //                  MOVEMENT                  //
             //                                            //
             //--------------------------------------------//
             #region MOVEMENT update
-            if (_timesincelastmove >= movedelay)
+            if (is_in_menu == false & is_paused == false)
             {
-                _collide(ref _player, tilesize, tileMap, ref _notrightspeed, ref _fallspeed, iscoliding);   
-                _player.X -= _notrightspeed;
-                _player.Y += _fallspeed;
-                _timesincelastmove = 0;
-                if (iscoliding[0] == true & _notrightspeed > 0)
+                if (_timesincelastmove >= movedelay)
                 {
-                    _notrightspeed = 0;
+                    _collide(ref _player, tilesize, tileMap, ref _notrightspeed, ref _fallspeed, iscoliding);
+                    _player.X -= _notrightspeed;
+                    _player.Y += _fallspeed;
+                    _timesincelastmove = 0;
+                    if (iscoliding[0] == true & _notrightspeed > 0)
+                    {
+                        _notrightspeed = 0;
+                    }
+                    if (iscoliding[1] == true & _notrightspeed < 0)
+                    {
+                        _notrightspeed = 0;
+                    }
+                    if (iscoliding[2] == true
+                        | iscoliding[3] == true)
+                    {
+                        _fallspeed = 0;
+                    }
+                    if (iscoliding[3] == true)
+                    {
+                        _fallspeed = 0;
+                    }
+                    if (true)
+                    {
+                        aircheck[0] = false;
+                        aircheck[1] = false;
+                        aircheck[2] = false;
+                        aircheck[3] = false;
+                        int X = 1;
+                        int Y = -1;
+                        _collide(ref _player, tilesize, tileMap, ref X, ref Y, aircheck);
+                        X = 1;
+                        Y = 1;
+                        _collide(ref _player, tilesize, tileMap, ref X, ref Y, aircheck);
+                        X = -1;
+                        Y = -1;
+                        _collide(ref _player, tilesize, tileMap, ref X, ref Y, aircheck);
+                        X = -1;
+                        Y = 1;
+                        _collide(ref _player, tilesize, tileMap, ref X, ref Y, aircheck);
+                        iscoliding[0] = aircheck[0];
+                        iscoliding[1] = aircheck[1];
+                        iscoliding[2] = aircheck[2];
+                        iscoliding[3] = aircheck[3];
+                    }
                 }
-                if (iscoliding[1] == true & _notrightspeed < 0)
+                #endregion
+                #region camera
+                r_level = new Rectangle(
+                    0,
+                    0,
+                    (int)((tileMap.GetLength(1) - 2) * tilesize * zoom),
+                    (int)((tileMap.GetLength(0) - 5) * tilesize * zoom));
+                if (r_level.Height > graphics.PreferredBackBufferHeight)
                 {
-                    _notrightspeed = 0;
+                    wiggleroom_y = (int)((r_level.Height - graphics.PreferredBackBufferHeight) * zoom);
+                    if (r_level.Y - camera_moveTo_y < 0
+                        & camera_moveTo_y > (int)((_player.Y - tilesize * 4 + _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2)
+                    {
+                        camera_moveTo_y = (int)((_player.Y - tilesize * 4 + _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2;
+                    }
+                    if (r_level.Y - camera_moveTo_y + r_level.Height > graphics.PreferredBackBufferHeight
+                        & camera_moveTo_y < (int)((_player.Y - tilesize * 4 + _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2)
+                    {
+                        camera_moveTo_y = (int)((_player.Y - tilesize * 4 + _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2;
+                    }
+                    if (camera_moveTo_y < 0)
+                    {
+                        camera_moveTo_y = 0;
+                    }
+                    if (camera_moveTo_y > wiggleroom_y / 2)
+                    {
+                        camera_moveTo_y = wiggleroom_y / 2;
+                    }
                 }
-                if (iscoliding[2] == true
-                    | iscoliding[3] == true)
+                if (r_level.Width > graphics.PreferredBackBufferWidth)
                 {
-                    _fallspeed = 0;
+                    wiggleroom_x = (int)((r_level.Width - graphics.PreferredBackBufferWidth) * zoom);
+                    if (r_level.X - camera_moveTo_x < 0
+                        & camera_moveTo_x > (int)((_player.X - tilesize - _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2)
+                    {
+                        camera_moveTo_x = (int)((_player.X - tilesize - _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2;
+                    }
+                    if (r_level.X - camera_moveTo_x + r_level.Width > graphics.PreferredBackBufferWidth
+                        & camera_moveTo_x < (int)((_player.X - tilesize - _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2)
+                    {
+                        camera_moveTo_x = (int)((_player.X - tilesize - _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2;
+                    }
+                    if (camera_moveTo_x < 0)
+                    {
+                        camera_moveTo_x = 0;
+                    }
+                    if (camera_moveTo_x > wiggleroom_x / 2)
+                    {
+                        camera_moveTo_x = wiggleroom_x / 2;
+                    }
                 }
-                if (iscoliding[3] == true)
+                if (false)
                 {
-                    _fallspeed = 0;
+                    if (((_player.X - tilesize) * zoom - camera_move_x) - (_player.Width * zoom / 2) < graphics.PreferredBackBufferWidth / 7 * 2)
+                    {
+                        camera_move_x += (int)((camera_moveTo_x - camera_move_x) / 8);
+                    }
+                    if (((_player.X - tilesize) * zoom - camera_move_x) - (_player.Width * zoom / 2) > graphics.PreferredBackBufferWidth / 7 * 4)
+                    {
+                        camera_move_x += (int)((camera_moveTo_x - camera_move_x) / 8);
+                    }
+                    if (((_player.Y) * zoom - camera_move_y) - (_player.Height * zoom) / 2 < graphics.PreferredBackBufferHeight / 7 * 2)
+                    {
+                        camera_move_y += (int)((camera_moveTo_y - camera_move_y) / 8);
+                    }
+                    if (((_player.Y) * zoom - camera_move_y) - (_player.Height * zoom) / 2 > graphics.PreferredBackBufferHeight / 7 * 4)
+                    {
+                        camera_move_y += (int)((camera_moveTo_y - camera_move_y) / 8);
+                    }
                 }
-                if (true)
+                camera_move_y += (int)((camera_moveTo_y - camera_move_y) / 16);
+                camera_move_x += (int)((camera_moveTo_x - camera_move_x) / 16);
+
+                #endregion
+                #region movement
+                #region squish
+                if (Keyboard.GetState().IsKeyDown(Keys.S)
+                    & iscoliding[3])
                 {
-                    aircheck[0] = false;
-                    aircheck[1] = false;
-                    aircheck[2] = false;
-                    aircheck[3] = false;
-                    int X = 1;
-                    int Y = -1;
-                    _collide(ref _player, tilesize, tileMap, ref X, ref Y, aircheck);
-                    X = 1;
-                    Y = 1;
-                    _collide(ref _player, tilesize, tileMap, ref X, ref Y, aircheck);
-                    X = -1;
-                    Y = -1;
-                    _collide(ref _player, tilesize, tileMap, ref X, ref Y, aircheck);
-                    X = -1;
-                    Y = 1;
-                    _collide(ref _player, tilesize, tileMap, ref X, ref Y, aircheck);
-                    iscoliding[0] = aircheck[0];
-                    iscoliding[1] = aircheck[1];
-                    iscoliding[2] = aircheck[2];
-                    iscoliding[3] = aircheck[3];
+
+                    is_crouching = true;
+                }
+                else
+                {
+                    is_crouching = false;
+                }
+                #endregion
+                #region HOROZONTAL MOVEMENT
+                if (_timesincelastacc > accdelay)
+                {
+                    if (is_crouching == false
+                        & wall_climb == false)
+                    {
+                        if (Keyboard.GetState().IsKeyDown(Keys.D)
+                            & !Keyboard.GetState().IsKeyDown(Keys.A)
+                        & (_notrightspeed > -speedcap)
+                        & iscoliding[1] == false)
+                        {
+                            _notrightspeed -= speed;
+                            _timesincelastacc = 0;
+                            iscoliding[0] = false;
+                        }
+                        if (Keyboard.GetState().IsKeyDown(Keys.A)
+                            & !Keyboard.GetState().IsKeyDown(Keys.D)
+                        & (_notrightspeed < speedcap)
+                        & iscoliding[0] == false)
+                        {
+                            _notrightspeed += speed;
+                            _timesincelastacc = 0;
+                            iscoliding[1] = false;
+                        }
+                    }
+                }
+                #endregion
+                #region JUMP
+                if (iscoliding[3] == true
+                    & Keyboard.GetState().IsKeyDown(Keys.Space)
+                    & autojustpreventer == false)
+                {
+                    _fallspeed -= jumpspeed;
+                    _timetilljumpslowdown = 0;
+                    //_Squish(jumpspeed, jumpspeed * 2, ref _player);
+                    iscoliding[3] = false;
+                    if (Keyboard.GetState().IsKeyDown(Keys.D))
+                    {
+                        _notrightspeed -= 5;
+                    }
+                    if (Keyboard.GetState().IsKeyDown(Keys.A))
+                    {
+                        _notrightspeed += 5;
+                    }
+                    autojustpreventer = true;
+                }
+                if (wall_climb == true
+                    & Keyboard.GetState().IsKeyDown(Keys.Space)
+                    & autojustpreventer == false)
+                {
+                    _fallspeed -= (int)(jumpspeed * 0.75);
+                    _timetilljumpslowdown = 0;
+                    wall_climb = false;
+                    if (iscoliding[0])
+                    {
+                        _notrightspeed -= (int)(jumpspeed * 0.8);
+                    }
+                    if (iscoliding[1])
+                    {
+                        _notrightspeed += (int)(jumpspeed * 0.8);
+                    }
+                    if (iscoliding[0]
+                        & Keyboard.GetState().IsKeyDown(Keys.A)
+                        & !Keyboard.GetState().IsKeyDown(Keys.D))
+                    {
+                        _notrightspeed += (int)(jumpspeed * 0.4);
+                    }
+                    if (iscoliding[1]
+                        & Keyboard.GetState().IsKeyDown(Keys.D)
+                        & !Keyboard.GetState().IsKeyDown(Keys.A))
+                    {
+                        _notrightspeed -= (int)(jumpspeed * 0.4);
+                    }
+                    if (iscoliding[0]
+                        & Keyboard.GetState().IsKeyDown(Keys.D)
+                        & !Keyboard.GetState().IsKeyDown(Keys.A))
+                    {
+                        _notrightspeed -= (int)(jumpspeed * 0.4);
+                    }
+                    if (iscoliding[1]
+                        & Keyboard.GetState().IsKeyDown(Keys.A)
+                        & !Keyboard.GetState().IsKeyDown(Keys.D))
+                    {
+                        _notrightspeed += (int)(jumpspeed * 0.4);
+                    }
+                    autojustpreventer = true;
+                }
+                if (!Keyboard.GetState().IsKeyDown(Keys.Space))
+                {
+                    autojustpreventer = false;
                 }
 
-            }
-
-            #endregion
-            #region camera
-            r_level = new Rectangle(
-                0,
-                0,
-                (int)((tileMap.GetLength(1) - 2) * tilesize * zoom),
-                (int)((tileMap.GetLength(0) - 5) * tilesize * zoom));
-            if (r_level.Height > graphics.PreferredBackBufferHeight)
-            {
-                wiggleroom_y = (int)((r_level.Height - graphics.PreferredBackBufferHeight) * zoom);                
-                if (r_level.Y - camera_moveTo_y < 0
-                    & camera_moveTo_y > (int)((_player.Y - tilesize * 4 + _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2)
-                {
-                    camera_moveTo_y = (int)((_player.Y - tilesize * 4 + _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2;
-                }
-                if (r_level.Y - camera_moveTo_y + r_level.Height > graphics.PreferredBackBufferHeight
-                    & camera_moveTo_y < (int)((_player.Y - tilesize * 4 + _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2)
-                {
-                    camera_moveTo_y = (int)((_player.Y - tilesize * 4 + _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2;
-                }
-                if (camera_moveTo_y < 0)
-                {
-                    camera_moveTo_y = 0;
-                } 
-                if (camera_moveTo_y > wiggleroom_y / 2)
-                {
-                    camera_moveTo_y = wiggleroom_y / 2 ;
-                }
-            }
-            if (r_level.Width > graphics.PreferredBackBufferWidth)
-            {
-                wiggleroom_x = (int)((r_level.Width - graphics.PreferredBackBufferWidth) * zoom);                
-                if (r_level.X - camera_moveTo_x < 0
-                    & camera_moveTo_x > (int)((_player.X - tilesize - _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2)
-                {
-                    camera_moveTo_x = (int)((_player.X - tilesize - _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2;
-                }
-                if (r_level.X - camera_moveTo_x + r_level.Width > graphics.PreferredBackBufferWidth
-                    & camera_moveTo_x < (int)((_player.X - tilesize - _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2)
-                {
-                    camera_moveTo_x = (int)((_player.X - tilesize - _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2;
-                }
-                if (camera_moveTo_x < 0)
-                {
-                    camera_moveTo_x = 0;
-                }
-                if (camera_moveTo_x > wiggleroom_x / 2)
-                {
-                    camera_moveTo_x = wiggleroom_x / 2;
-                }
-            }
-            if (false)
-            {
-                if (((_player.X - tilesize) * zoom - camera_move_x) - (_player.Width * zoom / 2) < graphics.PreferredBackBufferWidth / 7 * 2)
-                {
-                    camera_move_x += (int)((camera_moveTo_x - camera_move_x) / 8);
-                }
-                if (((_player.X - tilesize) * zoom - camera_move_x) - (_player.Width * zoom / 2) > graphics.PreferredBackBufferWidth / 7 * 4)
-                {
-                    camera_move_x += (int)((camera_moveTo_x - camera_move_x) / 8);
-                }
-                if (((_player.Y) * zoom - camera_move_y) - (_player.Height * zoom) / 2 < graphics.PreferredBackBufferHeight / 7 * 2)
-                {
-                    camera_move_y += (int)((camera_moveTo_y - camera_move_y) / 8);
-                }
-                if (((_player.Y) * zoom - camera_move_y) - (_player.Height * zoom) / 2 > graphics.PreferredBackBufferHeight / 7 * 4)
-                {
-                    camera_move_y += (int)((camera_moveTo_y - camera_move_y) / 8);
-                }
-            }
-            camera_move_y += (int)((camera_moveTo_y - camera_move_y) / 16);
-            camera_move_x += (int)((camera_moveTo_x - camera_move_x) / 16);
-
-            #endregion
-            #region movement
-            #region squish
-            if (Keyboard.GetState().IsKeyDown(Keys.S)
-                & iscoliding[3])
-            {
-
-                is_crouching = true;
-            }
-            else
-            {                
-                is_crouching = false;
-            }
-            #endregion
-            #region HOROZONTAL MOVEMENT
-            if (_timesincelastacc > accdelay)
-            {
-                if (is_crouching == false
+                #endregion
+                #region GRAVITY
+                if (iscoliding[3] == false
+                    & _fallspeed >= -4
+                    & _fallspeed < fallcap1
+                    & _timesincelastfallacc >= falldelay
                     & wall_climb == false)
                 {
-                    if (Keyboard.GetState().IsKeyDown(Keys.D)
-                        & ! Keyboard.GetState().IsKeyDown(Keys.A)
-                    & (_notrightspeed > -speedcap)
-                    & iscoliding[1] == false)
-                    {
-                        _notrightspeed -= speed;
-                        _timesincelastacc = 0;
-                        iscoliding[0] = false;
-                    }
-                    if (Keyboard.GetState().IsKeyDown(Keys.A)
-                        & !Keyboard.GetState().IsKeyDown(Keys.D)
-                    & (_notrightspeed < speedcap)
-                    & iscoliding[0] == false)
-                    {
-                        _notrightspeed += speed;
-                        _timesincelastacc = 0;
-                        iscoliding[1] = false;
-                    }
+                    _fallspeed += gravspeed;
+                    _timesincelastfallacc = 0;
                 }
-            }
-            #endregion
-            #region JUMP
-            if (iscoliding[3] == true
-                & Keyboard.GetState().IsKeyDown(Keys.Space)
-                & autojustpreventer == false)
-            {
-                _fallspeed -= jumpspeed;
-                _timetilljumpslowdown = 0;
-                //_Squish(jumpspeed, jumpspeed * 2, ref _player);
-                iscoliding[3] = false;
-                if (Keyboard.GetState().IsKeyDown(Keys.D))
+                if (Keyboard.GetState().IsKeyDown(Keys.S)
+                    & _fallspeed >= -4
+                    & _fallspeed < fallcap2
+                    & _timesincelastfallacc >= falldelay
+                    & iscoliding[3] == false
+                    & wall_climb == false)
                 {
-                    _notrightspeed -= 5;
+                    _fallspeed += gravspeed;
+                    _timesincelastfallacc = 0;
                 }
-                if (Keyboard.GetState().IsKeyDown(Keys.A))
+                if (!Keyboard.GetState().IsKeyDown(Keys.S)
+                    & _fallspeed > fallcap1)
                 {
-                    _notrightspeed += 5;
+                    _fallspeed -= gravspeed;
                 }
-                autojustpreventer = true;
-            }
-            if (wall_climb == true
-                & Keyboard.GetState().IsKeyDown(Keys.Space)
-                & autojustpreventer == false)
-            {
-                _fallspeed -= (int)(jumpspeed * 0.75);
-                _timetilljumpslowdown = 0;
-                wall_climb = false;
-                if (iscoliding[0])
-                {
-                    _notrightspeed -= (int)(jumpspeed * 0.8);
-                }
-                if (iscoliding[1])
-                {
-                    _notrightspeed += (int)(jumpspeed * 0.8);
-                }
-                if (iscoliding[0]
-                    & Keyboard.GetState().IsKeyDown(Keys.A)
-                    & !Keyboard.GetState().IsKeyDown(Keys.D))
-                {
-                    _notrightspeed += (int)(jumpspeed * 0.4);
-                }
-                if (iscoliding[1]
-                    & Keyboard.GetState().IsKeyDown(Keys.D)
-                    & !Keyboard.GetState().IsKeyDown(Keys.A))
-                {
-                    _notrightspeed -= (int)(jumpspeed * 0.4);
-                }
-                if (iscoliding[0]
-                    & Keyboard.GetState().IsKeyDown(Keys.D)
-                    & !Keyboard.GetState().IsKeyDown(Keys.A))
-                {
-                    _notrightspeed -= (int)(jumpspeed * 0.4);
-                }
-                if (iscoliding[1]
-                    & Keyboard.GetState().IsKeyDown(Keys.A)
-                    & !Keyboard.GetState().IsKeyDown(Keys.D))
-                {
-                    _notrightspeed += (int)(jumpspeed * 0.4);
-                }
-                autojustpreventer = true;
-            }
-            if (!Keyboard.GetState().IsKeyDown(Keys.Space))
-            {
-                autojustpreventer = false;
-            }
-
-            #endregion
-            #region GRAVITY
-            if (iscoliding[3] == false 
-                & _fallspeed >= -4 
-                & _fallspeed < fallcap1
-                & _timesincelastfallacc >= falldelay
-                & wall_climb == false)
-            {
-                _fallspeed += gravspeed;
-                _timesincelastfallacc = 0;
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.S)
-                & _fallspeed >= -4
-                & _fallspeed < fallcap2
-                & _timesincelastfallacc >= falldelay
-                & iscoliding[3] == false
-                & wall_climb == false)
-            {
-                _fallspeed += gravspeed;
-                _timesincelastfallacc = 0;
-            }
-            if (!Keyboard.GetState().IsKeyDown(Keys.S) 
-                & _fallspeed > fallcap1)
-            {
-                _fallspeed -= gravspeed;
-            }
 
 
-            if (_fallspeed > fallcap2
-                & _timesincelastairrescheck < airresdelay)
-            {
-                _fallspeed -= drag;
-                _timesincelastairrescheck = 0;
-            }
-            if ((!Keyboard.GetState().IsKeyDown(Keys.Space)
-                & _timesincelastjumpslowdown >= jumpslowdowndelay
-                & _timetilljumpslowdown >= jumpvariation_lower
-                || _timetilljumpslowdown >= jumpvariation_upper)
-                & _fallspeed < 0
-                & _timesincelastjumpslowdown >= jumpslowdowndelay)
-            {
-                _fallspeed += gravspeed;
-                _timesincelastjumpslowdown = 0;
-            }
-            #endregion
-            #region FRICTION
-            if (is_crouching == true)
-            {
-                _notrightspeed = 0;
-            }
-            if (_timesincelastfric >= fricdelay
-                && iscoliding[3] == true)
-            {
-                if(((!Keyboard.GetState().IsKeyDown(Keys.A)
-                | Keyboard.GetState().IsKeyDown(Keys.D))
-                & _notrightspeed > 0)
-                | _notrightspeed > speedcap)
+                if (_fallspeed > fallcap2
+                    & _timesincelastairrescheck < airresdelay)
                 {
-                    if (_notrightspeed >= friction)
-                    {
-                        _notrightspeed -= friction;
-                    }
-                    else
-                    {
-                        _notrightspeed = 0;
-                    }
-                    _timesincelastfric = 0;
+                    _fallspeed -= drag;
+                    _timesincelastairrescheck = 0;
                 }
-                if (((!Keyboard.GetState().IsKeyDown(Keys.D)
-                | Keyboard.GetState().IsKeyDown(Keys.A))
-                & _notrightspeed < 0)
-                | _notrightspeed < -speedcap)
+                if ((!Keyboard.GetState().IsKeyDown(Keys.Space)
+                    & _timesincelastjumpslowdown >= jumpslowdowndelay
+                    & _timetilljumpslowdown >= jumpvariation_lower
+                    || _timetilljumpslowdown >= jumpvariation_upper)
+                    & _fallspeed < 0
+                    & _timesincelastjumpslowdown >= jumpslowdowndelay)
                 {
-                    if (_notrightspeed <= friction)
+                    _fallspeed += gravspeed;
+                    _timesincelastjumpslowdown = 0;
+                }
+                #endregion
+                #region FRICTION
+                if (is_crouching == true)
+                {
+                    _notrightspeed = 0;
+                }
+                if (_timesincelastfric >= fricdelay
+                    && iscoliding[3] == true)
+                {
+                    if (((!Keyboard.GetState().IsKeyDown(Keys.A)
+                    | Keyboard.GetState().IsKeyDown(Keys.D))
+                    & _notrightspeed > 0)
+                    | _notrightspeed > speedcap)
                     {
-                        _notrightspeed += friction;
+                        if (_notrightspeed >= friction)
+                        {
+                            _notrightspeed -= friction;
+                        }
+                        else
+                        {
+                            _notrightspeed = 0;
+                        }
+                        _timesincelastfric = 0;
                     }
-                    else
+                    if (((!Keyboard.GetState().IsKeyDown(Keys.D)
+                    | Keyboard.GetState().IsKeyDown(Keys.A))
+                    & _notrightspeed < 0)
+                    | _notrightspeed < -speedcap)
                     {
-                        _notrightspeed = 0;
+                        if (_notrightspeed <= friction)
+                        {
+                            _notrightspeed += friction;
+                        }
+                        else
+                        {
+                            _notrightspeed = 0;
+                        }
+                        _timesincelastfric = 0;
                     }
-                    _timesincelastfric = 0;
                 }
-            }
-            else if (_timesincelastacc >= airresdelay)
-            {
-                if (((!Keyboard.GetState().IsKeyDown(Keys.A)
-                | Keyboard.GetState().IsKeyDown(Keys.D))
-                & _notrightspeed > 0)
-                | _notrightspeed > speedcap)
+                else if (_timesincelastacc >= airresdelay)
                 {
-                    if (_notrightspeed >= drag)
+                    if (((!Keyboard.GetState().IsKeyDown(Keys.A)
+                    | Keyboard.GetState().IsKeyDown(Keys.D))
+                    & _notrightspeed > 0)
+                    | _notrightspeed > speedcap)
                     {
-                        _notrightspeed -= drag;
+                        if (_notrightspeed >= drag)
+                        {
+                            _notrightspeed -= drag;
+                        }
+                        else
+                        {
+                            _notrightspeed = 0;
+                        }
+                        _timesincelastfric = 0;
                     }
-                    else
+                    if (((!Keyboard.GetState().IsKeyDown(Keys.D)
+                    | Keyboard.GetState().IsKeyDown(Keys.A))
+                    & _notrightspeed < 0)
+                    | _notrightspeed < -speedcap)
                     {
-                        _notrightspeed = 0;
+                        if (_notrightspeed <= drag)
+                        {
+                            _notrightspeed += drag;
+                        }
+                        else
+                        {
+                            _notrightspeed = 0;
+                        }
+                        _timesincelastfric = 0;
                     }
-                    _timesincelastfric = 0;
                 }
-                if (((!Keyboard.GetState().IsKeyDown(Keys.D)
-                | Keyboard.GetState().IsKeyDown(Keys.A))
-                & _notrightspeed < 0)
-                | _notrightspeed < -speedcap)
+                #endregion
+                #region wall climb
+                if (Keyboard.GetState().IsKeyDown(Keys.LeftShift)
+                    & (iscoliding[1]
+                    || iscoliding[0]))
                 {
-                    if (_notrightspeed <= drag)
+                    wall_climb = true;
+                    if (_fallspeed > 0)
                     {
-                        _notrightspeed += drag;
+                        _fallspeed = 0;
                     }
-                    else
+                }
+                else
+                {
+                    wall_climb = false;
+                }
+                if (wall_climb == true
+                    & Keyboard.GetState().IsKeyDown(Keys.W))
+                {
+                    if (_fallspeed > climb_speed)
                     {
-                        _notrightspeed = 0;
+                        _fallspeed = climb_speed;
                     }
-                    _timesincelastfric = 0;
                 }
-            }
-            #endregion
-            #region wall climb
-            if (Keyboard.GetState().IsKeyDown(Keys.LeftShift)
-                & (iscoliding[1]
-                || iscoliding[0]))
-            {
-                wall_climb = true;
-                if (_fallspeed > 0)
+                if (wall_climb == true
+                    & Keyboard.GetState().IsKeyDown(Keys.S))
                 {
-                    _fallspeed = 0;
+                    if (_fallspeed < slip_speed)
+                    {
+                        _fallspeed = slip_speed;
+                    }
+
                 }
-            }
-            else
-            {
-                wall_climb = false;
-            }
-            if(wall_climb == true
-                & Keyboard.GetState().IsKeyDown(Keys.W))
-            {
-                if (_fallspeed > climb_speed)
+                #endregion
+                #endregion
+                #region debug
+                if (Keyboard.GetState().IsKeyDown(Keys.Tab))
                 {
-                    _fallspeed = climb_speed;
-                }               
-            }
-            if (wall_climb == true
-                & Keyboard.GetState().IsKeyDown(Keys.S))
-            {
-                if (_fallspeed < slip_speed)
-                {
-                    _fallspeed = slip_speed;
+                    if (debug == true)
+                    {
+                        debug = false;
+                    }
+                    if (debug == false)
+                    {
+                        debug = true;
+                    }
                 }
-                
-            }
-            #endregion
-            #endregion
-            #region debug
-            if (Keyboard.GetState().IsKeyDown(Keys.Tab))
-            {
-                if (debug == true)
+                #endregion
+                base.Update(gameTime);
+                #region timers
+                _timesincelastacc += gameTime.ElapsedGameTime.TotalSeconds;
+                _timesincelastfric += gameTime.ElapsedGameTime.TotalSeconds;
+                _timesincelastmove += gameTime.ElapsedGameTime.TotalSeconds;
+                _timesincelastfallacc += gameTime.ElapsedGameTime.TotalSeconds;
+                _timesincelastairrescheck += gameTime.ElapsedGameTime.TotalSeconds;
+                _timesincelastjumpslowdown += gameTime.ElapsedGameTime.TotalSeconds;
+                if (iscoliding[3] == false)
                 {
-                    debug = false;
+                    _timetilljumpslowdown += gameTime.ElapsedGameTime.TotalSeconds;
                 }
-                if (debug == false)
-                {
-                    debug = true;
-                }
-            }
-            #endregion
-            base.Update(gameTime);
-            #region timers
-            _timesincelastacc += gameTime.ElapsedGameTime.TotalSeconds;
-            _timesincelastfric += gameTime.ElapsedGameTime.TotalSeconds;
-            _timesincelastmove += gameTime.ElapsedGameTime.TotalSeconds;
-            _timesincelastfallacc += gameTime.ElapsedGameTime.TotalSeconds;
-            _timesincelastairrescheck += gameTime.ElapsedGameTime.TotalSeconds;
-            _timesincelastjumpslowdown += gameTime.ElapsedGameTime.TotalSeconds;
-            if (iscoliding[3] == false)
-            {
-                _timetilljumpslowdown += gameTime.ElapsedGameTime.TotalSeconds;
+               
             }
             #endregion
         }
@@ -992,41 +1038,50 @@ namespace basic_test
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
-            
             spriteBatch.Begin();
-            spriteBatch.Draw(level, new Rectangle(
-                (int)((r_level.X * zoom) - camera_move_x),
-                (int)((r_level.Y * zoom) - camera_move_y),
-                r_level.Width,
-                r_level.Height),
-                Color.White);
-
-            spriteBatch.Draw(Player, new Rectangle(
-                (int)((_player.X - tilesize)* zoom - camera_move_x),
-                (int)((_player.Y - tilesize * 4) * zoom - camera_move_y),
-                (int)(_player.Width * zoom),
-                (int)(_player.Height * zoom)), 
-                Color.White);
-            SpriteFont font;
-            font = Content.Load<SpriteFont>("bruh");
-            if (debug)
+            if (is_in_menu == false)
             {
-                spriteBatch.DrawString(font, "x :" + _player.X + "  Y :" + (_player.Y + _player.Height), new Vector2(50, 50), Color.White);
-                spriteBatch.DrawString(font, "bot :" + iscoliding[3] + "  top :" + iscoliding[2], new Vector2(50, 70), Color.White);
-                spriteBatch.DrawString(font, "lef :" + iscoliding[0] + "  rit :" + iscoliding[1], new Vector2(50, 90), Color.White);
-                spriteBatch.DrawString(font, "x-speed :" + _notrightspeed + "  Y-speed :" + _fallspeed, new Vector2(50, 110), Color.White);
-                spriteBatch.DrawString(font, "camra_move_x :" + camera_move_x + "  camera_move_y :" + camera_move_y, new Vector2(50, 130), Color.White);
-                spriteBatch.DrawString(font, "temp 1 :" + graphics.PreferredBackBufferWidth / 7 * 2 + "  temp 2 :" + (graphics.PreferredBackBufferWidth / 7 * 4), new Vector2(50, 150), Color.White);
+                spriteBatch.Draw(level, new Rectangle(
+                    (int)((r_level.X * zoom) - camera_move_x),
+                    (int)((r_level.Y * zoom) - camera_move_y),
+                    r_level.Width,
+                    r_level.Height),
+                    Color.White);
+
+                spriteBatch.Draw(Player, new Rectangle(
+                    (int)((_player.X - tilesize) * zoom - camera_move_x),
+                    (int)((_player.Y - tilesize * 4) * zoom - camera_move_y),
+                    (int)(_player.Width * zoom),
+                    (int)(_player.Height * zoom)),
+                    Color.White);
+                SpriteFont font;
+                font = Content.Load<SpriteFont>("bruh");
+                if (debug)
+                {
+                    spriteBatch.DrawString(font, "x :" + _player.X + "  Y :" + (_player.Y + _player.Height), new Vector2(50, 50), Color.White);
+                    spriteBatch.DrawString(font, "bot :" + iscoliding[3] + "  top :" + iscoliding[2], new Vector2(50, 70), Color.White);
+                    spriteBatch.DrawString(font, "lef :" + iscoliding[0] + "  rit :" + iscoliding[1], new Vector2(50, 90), Color.White);
+                    spriteBatch.DrawString(font, "x-speed :" + _notrightspeed + "  Y-speed :" + _fallspeed, new Vector2(50, 110), Color.White);
+                    spriteBatch.DrawString(font, "camra_move_x :" + camera_move_x + "  camera_move_y :" + camera_move_y, new Vector2(50, 130), Color.White);
+                    spriteBatch.DrawString(font, "temp 1 :" + mousepos_x + "  temp 2 :" + mousepos_y, new Vector2(50, 150), Color.White);
+                }
+            }
+            if (is_paused == true & is_in_menu == false)
+            {             
+                spriteBatch.Draw(pausescreen, new Rectangle(0, 0, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight), Color.White);
+            }
+            if (is_in_menu == true)
+            {
+                spriteBatch.Draw(menu_b, new Rectangle(0, 0, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight), Color.White);
             }
             //spriteBatch.Draw(Player, level_rec, Color.Black);
-
+            spriteBatch.Draw(pointer, new Rectangle(mousepos_x, mousepos_y, 35, 45), Color.White);
 
             spriteBatch.End();
 
             // TODO: Add your drawing code here
             graphics.IsFullScreen = true;
             base.Draw(gameTime);
-
         }
     }
 }
