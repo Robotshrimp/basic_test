@@ -1,7 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-
+using System.Collections.Generic;
+using System.IO;
 
 
 namespace basic_test
@@ -14,37 +15,49 @@ namespace basic_test
         
         #region variables
         int[,] tileMap;
-        double zoom = 2;
+        double zoom = 1;
         int tilesize = 96;
         bool is_crouching = false;
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
+        MouseState mouseState;
         int mousepos_x;
         int mousepos_y;
         private Texture2D Player;
         private Texture2D level;
         private Texture2D pausescreen;
+        private Texture2D pointer;
+        private Texture2D bar;
+        private Texture2D grid;
+
+        private Texture2D menu_b;
+        private Texture2D play_button;
+        private Texture2D exit_button;
+        private Texture2D level_button;
         private Texture2D pause_text;
         private Texture2D Menu_text;
         private Texture2D resume_text;
-        private Texture2D pointer;
-        private Texture2D menu_b;
         public Rectangle _player = new Rectangle(96, 288, 160, 80);
         Rectangle r_level = new Rectangle(0,0,0,0);
         private int _fallspeed = -12;
         private int _notrightspeed = -0;
         bool debug = false;
         bool is_paused;
-        bool is_in_menu = false;
+        bool is_in_menu = true;
         bool escape_is_pressed;
         bool M_is_pressed;
+        bool pressed_x;
+        bool pressed_y;
         int wiggleroom_x = 0;
         int wiggleroom_y = 0;
         int camera_moveTo_x = 0;
         int camera_moveTo_y = 0;
         int camera_move_x = 0;
         int camera_move_y = 0;
-
+        int size_x = 10;
+        int size_y = 10;
+        bool is_editing;
+        List<List<int>> edit_tilemap = new List<List<int>>();
         //movement variables
 
         //horozontal
@@ -54,7 +67,7 @@ namespace basic_test
         private int speedcap = 18;
 
         //vertical
-       
+        
         private int fallcap1 = 24;
         private int fallcap2 = 36;
         private int drag = 1;
@@ -81,7 +94,7 @@ namespace basic_test
         private double _timesincelastjumpslowdown = 0;
 
         private double jumpvariation_upper = 0.2;
-        private double jumpvariation_lower = 0.10;
+        private double jumpvariation_lower = 0.1;
         private double _timetilljumpslowdown = 0;
 
         private double falldelay = 0;
@@ -111,6 +124,22 @@ namespace basic_test
             false,
             false
         };
+
+
+
+
+
+
+
+
+
+        Rectangle paused;
+        Rectangle menu;
+        Rectangle resume;
+        Rectangle play;
+        Rectangle level_editer;
+        Rectangle exit;
+        Rectangle edit_menu;
         #endregion
         public Game1()
         
@@ -133,10 +162,31 @@ namespace basic_test
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-
+            paused = new Rectangle ((graphics.PreferredBackBufferWidth - 720) / 2, (graphics.PreferredBackBufferHeight / 2) - 280, 720, 192);
+            menu = new Rectangle((graphics.PreferredBackBufferWidth - 228) / 2, (graphics.PreferredBackBufferHeight / 2), 228, 60);
+            resume = new Rectangle((graphics.PreferredBackBufferWidth - 360) / 2, (graphics.PreferredBackBufferHeight / 2) + 80, 360, 84);
+            play = new Rectangle(200, 500, 408, 168);
+            exit = new Rectangle(200, 750, 384, 168);
+            level_editer = new Rectangle(200, 1000, 1176, 168);
+            edit_menu = new Rectangle(40, 40, 228 * 2, 60 * 2);
             base.Initialize();
-            _player.Width = 80;
-            _player.Height = 160;
+            _player.Width = 84;
+            _player.Height = 168;
+            pressed_x = false;
+            pressed_y = false;
+            if (!File.Exists("position_x.txt"))
+                File.WriteAllText("position_x.txt", _player.X.ToString());
+            if (!File.Exists("position_y.txt"))
+                File.WriteAllText("position_y.txt", _player.Y.ToString());
+            if (!File.Exists("notrightspeed.txt"))
+                File.WriteAllText("notrightspeed.txt", _notrightspeed.ToString());
+            if (!File.Exists("fallspeed.txt"))
+                File.WriteAllText("fallspeed.txt", _fallspeed.ToString());
+            
+            _player.X = int.Parse(File.ReadAllText("position_x.txt"));
+            _player.Y = int.Parse(File.ReadAllText("position_y.txt"));
+            _notrightspeed = int.Parse(File.ReadAllText("notrightspeed.txt"));
+            _fallspeed = int.Parse(File.ReadAllText("fallspeed.txt")); 
             tileMap = new int[,]
             {
                 {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -163,6 +213,24 @@ namespace basic_test
             };
             
         }
+        #region button function
+        static public void f_button(
+            Rectangle dimentions,
+            ref bool ispressed)
+        {
+            MouseState mouseState = Mouse.GetState();
+            int mousepos_x = mouseState.X;
+            int mousepos_y = mouseState.Y;
+            if (mouseState.X > dimentions.X &
+                mouseState.X < dimentions.X + dimentions.Width &
+                mouseState.Y > dimentions.Y &
+                mouseState.Y < dimentions.Y + dimentions.Height &
+                mouseState.LeftButton == ButtonState.Pressed)
+            {
+                ispressed = true;
+            }
+        }
+        #endregion
         #region slope check
         static public void f_slope_check(
             int till_rec_dif,
@@ -171,7 +239,7 @@ namespace basic_test
             int player_dem_neg,
             int player_dem_pos,
             int tilemap,
-            ref int _res,
+            ref int resistance,
             ref bool wallcheck,
             bool rescheck,
             int change)
@@ -183,12 +251,13 @@ namespace basic_test
                 {
                     if (rescheck)
                     {
-                        _res = change;
+                        resistance = change;
                         wallcheck = true;
                     }
                 }
             }
         }
+
 
         #endregion
         #region squishy function
@@ -563,13 +632,19 @@ namespace basic_test
             Player = Content.Load<Texture2D>("BasicShape");
             level = Content.Load<Texture2D>("room 1");
             pausescreen = Content.Load<Texture2D>("menu background");
-            pause_text = Content.Load<Texture2D>("pause text");
-            Menu_text = Content.Load<Texture2D>("menu text");
-            resume_text = Content.Load<Texture2D>("resume text");
             pointer = Content.Load<Texture2D>("pointer");
+            bar = Content.Load<Texture2D>("bar");
+            grid = Content.Load<Texture2D>("grid");
+
+            //temporary
+
             menu_b = Content.Load<Texture2D>("menu");
-
-
+            play_button = Content.Load<Texture2D>("play button");
+            exit_button = Content.Load<Texture2D>("exit button");
+            level_button = Content.Load<Texture2D>("level editer button");
+            pause_text = Content.Load<Texture2D>("pause button");
+            Menu_text = Content.Load<Texture2D>("menu button");
+            resume_text = Content.Load<Texture2D>("resume button");
             // TODO: use this.Content to load your game content here
         }
         
@@ -590,11 +665,17 @@ namespace basic_test
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Update(GameTime gameTime)
         {
-            MouseState mouseState = Mouse.GetState();
+            mouseState = Mouse.GetState();
             mousepos_x = mouseState.X;
             mousepos_y = mouseState.Y;
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.C))
+            {
+                File.WriteAllText("position_x.txt", _player.X.ToString());
+                File.WriteAllText("position_y.txt", _player.Y.ToString());
+                File.WriteAllText("notrightspeed.txt", _notrightspeed.ToString());
+                File.WriteAllText("fallspeed.txt", _fallspeed.ToString());
                 Exit();
+            }
             if (!Keyboard.GetState().IsKeyDown(Keys.Escape))
                 escape_is_pressed = false;
             if (!Keyboard.GetState().IsKeyDown(Keys.M))
@@ -615,13 +696,151 @@ namespace basic_test
                     is_in_menu = true;
                 M_is_pressed = true;
             }
+            #region buttons
+            bool pressed_resume = false;
+            f_button(resume, ref pressed_resume);
+            if (pressed_resume &
+                is_paused)
+            {
+                is_paused = false;
+            }
+            bool pressed_menu = false;
+            f_button(menu, ref pressed_menu);
+            if (pressed_menu & 
+                is_paused)
+            {
+                is_in_menu = true;
+            }
+            bool pressed_play = false;
+            f_button(play, ref pressed_play);
+            if (pressed_play &
+                is_in_menu)
+            {
+                is_in_menu = false;
+                is_paused = false;
+            }
+            bool pressed_exit = false;
+            f_button(exit, ref pressed_exit);
+            if (pressed_exit &
+                is_in_menu &
+                !is_editing)
+            {
+                File.WriteAllText("position_x.txt", _player.X.ToString());
+                File.WriteAllText("position_y.txt", _player.Y.ToString());
+                File.WriteAllText("notrightspeed.txt", _notrightspeed.ToString());
+                File.WriteAllText("fallspeed.txt", _fallspeed.ToString());
+                Exit();
+            }
+            bool pressed_editor = false;
+            f_button(level_editer, ref pressed_editor);
+            if (pressed_editor & 
+                is_in_menu)
+            {
+                is_editing = true;
+                is_in_menu = false;
+            }
+
+            #endregion
+            #region LEVEL EDITOR
+            if (is_editing)
+            {
+                if (Keyboard.GetState().IsKeyDown(Keys.X) &
+                    pressed_x == false)
+                {
+                    if (Keyboard.GetState().IsKeyDown(Keys.LeftAlt))
+                    {
+                        if (Keyboard.GetState().IsKeyDown(Keys.LeftControl))
+                        {
+                            size_x -= 10;
+                        }
+                        else if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
+                        {
+                            size_x -= 100;
+                        }
+                        else
+                        {
+                            size_x -= 1;
+                        }
+                    }
+                    else
+                    {
+                        if (Keyboard.GetState().IsKeyDown(Keys.LeftControl))
+                        {
+                            size_x += 10;
+                        }
+                        else if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
+                        {
+                            size_x += 100;
+                        }
+                        else
+                        {
+                            size_x += 1;
+                        }
+                    }
+                    pressed_x = true;
+                }
+                if (Keyboard.GetState().IsKeyDown(Keys.Y) &
+                    pressed_y == false)
+                {
+                    if (Keyboard.GetState().IsKeyDown(Keys.LeftAlt))
+                    {
+                        if (Keyboard.GetState().IsKeyDown(Keys.LeftControl))
+                        {
+                            size_y -= 10;
+                        }
+                        else if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
+                        {
+                            size_y -= 100;
+                        }
+                        else
+                        {
+                            size_y -= 1;
+                        }
+                    }
+                    else
+                    {
+                        if (Keyboard.GetState().IsKeyDown(Keys.LeftControl))
+                        {
+                            size_y += 10;
+                        }
+                        else if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
+                        {
+                            size_y += 100;
+                        }
+                        else
+                        {
+                            size_y += 1;
+                        }
+                    }
+                    pressed_y = true;
+                }
+                if (edit_tilemap.Count == size_y)
+                {
+                    if (edit_tilemap[edit_tilemap.Count - 1].Count == size_x)
+                    {
+                        if (mouseState.LeftButton == ButtonState.Pressed)
+                        {
+                            if ((int)((mousepos_y - 200) / 96) < size_y &
+                                (int)(mousepos_x / 96) < size_x)
+                                edit_tilemap[(int)((mousepos_y - 200) / 96)][(int)(mousepos_x / 96)] = 1;
+                        }
+                        if (mouseState.RightButton == ButtonState.Pressed)
+                        {
+                            if ((int)((mousepos_y - 200) / 96) < size_y &
+                                (int)(mousepos_x / 96) < size_x)
+                                edit_tilemap[(int)((mousepos_y - 200) / 96)][(int)(mousepos_x / 96)] = 0;
+                        }
+                    }
+                }
+            }
+            #endregion
             //--------------------------------------------//
             //                                            //
             //                  MOVEMENT                  //
             //                                            //
             //--------------------------------------------//
             #region MOVEMENT update
-            if (is_in_menu == false & is_paused == false)
+            if (is_in_menu == false & is_paused == false & is_editing == false)
             {
                 if (_timesincelastmove >= movedelay)
                 {
@@ -721,6 +940,7 @@ namespace basic_test
                         camera_moveTo_x = wiggleroom_x / 2;
                     }
                 }
+                // TODO: 
                 if (false)
                 {
                     if (((_player.X - tilesize) * zoom - camera_move_x) - (_player.Width * zoom / 2) < graphics.PreferredBackBufferWidth / 7 * 2)
@@ -1037,10 +1257,13 @@ namespace basic_test
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.Black);
+            GraphicsDevice.Clear(Color.DarkGray);
             spriteBatch.Begin();
-            if (is_in_menu == false)
+            if (is_in_menu == false & 
+                is_editing == false)
             {
+                int x = (int)(_player.X / 12) * 12;
+                int y = (int)(_player.Y / 12) * 12;
                 spriteBatch.Draw(level, new Rectangle(
                     (int)((r_level.X * zoom) - camera_move_x),
                     (int)((r_level.Y * zoom) - camera_move_y),
@@ -1049,8 +1272,8 @@ namespace basic_test
                     Color.White);
 
                 spriteBatch.Draw(Player, new Rectangle(
-                    (int)((_player.X - tilesize) * zoom - camera_move_x),
-                    (int)((_player.Y - tilesize * 4) * zoom - camera_move_y),
+                    (int)((x - tilesize) * zoom - camera_move_x),
+                    (int)((y - tilesize * 4) * zoom - camera_move_y),
                     (int)(_player.Width * zoom),
                     (int)(_player.Height * zoom)),
                     Color.White);
@@ -1059,23 +1282,71 @@ namespace basic_test
                 if (debug)
                 {
                     spriteBatch.DrawString(font, "x :" + _player.X + "  Y :" + (_player.Y + _player.Height), new Vector2(50, 50), Color.White);
-                    spriteBatch.DrawString(font, "bot :" + iscoliding[3] + "  top :" + iscoliding[2], new Vector2(50, 70), Color.White);
+                    spriteBatch.DrawString(font, "bot :" + iscoliding[3] + "  top :" + iscoliding[2], new Vector2(50, 70), Color.White);    
                     spriteBatch.DrawString(font, "lef :" + iscoliding[0] + "  rit :" + iscoliding[1], new Vector2(50, 90), Color.White);
                     spriteBatch.DrawString(font, "x-speed :" + _notrightspeed + "  Y-speed :" + _fallspeed, new Vector2(50, 110), Color.White);
                     spriteBatch.DrawString(font, "camra_move_x :" + camera_move_x + "  camera_move_y :" + camera_move_y, new Vector2(50, 130), Color.White);
                     spriteBatch.DrawString(font, "temp 1 :" + mousepos_x + "  temp 2 :" + mousepos_y, new Vector2(50, 150), Color.White);
                 }
             }
-            if (is_paused == true & is_in_menu == false)
-            {             
-                spriteBatch.Draw(pausescreen, new Rectangle(0, 0, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight), Color.White);
-            }
-            if (is_in_menu == true)
+            if (is_paused & 
+                is_in_menu == false &
+                is_editing == false)
             {
-                spriteBatch.Draw(menu_b, new Rectangle(0, 0, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight), Color.White);
+                spriteBatch.Draw(pausescreen, new Rectangle(0, 0, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight), Color.White);
+                spriteBatch.Draw(pause_text, paused, Color.White);
+                spriteBatch.Draw(Menu_text, menu, Color.White);
+                spriteBatch.Draw(resume_text, resume, Color.White);
+            }
+            if (is_in_menu &
+                is_editing == false)
+            {
+                spriteBatch.Draw(menu_b, new Rectangle(0, 0, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight), Color.Black);
+                spriteBatch.Draw(play_button, play, Color.White);
+                spriteBatch.Draw(exit_button, exit, Color.White);
+                spriteBatch.Draw(level_button, level_editer, Color.White);
+            }
+            if (is_editing)
+            {
+                spriteBatch.Draw(bar, new Rectangle(0, 0, graphics.PreferredBackBufferWidth, 200), Color.White);
+                spriteBatch.Draw(Menu_text, new Rectangle(40, 40, 228 * 2, 60 * 2), Color.White);
+                if (edit_tilemap.Capacity < size_y)
+                    edit_tilemap.Capacity = size_y;
+                for (int i = edit_tilemap.Count; i < edit_tilemap.Capacity; i++)
+                {
+                    edit_tilemap.Add(new List<int>());
+                }
+                for (int y = 0; y < size_y; y ++)
+                {
+                    if (edit_tilemap[y].Capacity < size_x)
+                        edit_tilemap[y].Capacity = size_x;
+                    for (int i = edit_tilemap[y].Count; i < edit_tilemap[y].Capacity; i++)
+                    {
+                        edit_tilemap[y].Add(0);
+                    }
+                    for (int x = 0; x < size_x; x++)
+                    {
+                        if (edit_tilemap[y][x] == 0)
+                        {
+                            spriteBatch.Draw(grid, new Rectangle(x * 96, y * 96 + 200, 96, 96), Color.White);
+                        }
+                        if (edit_tilemap[y][x] == 1)
+                        {
+                            spriteBatch.Draw(Player, new Rectangle(x * 96, y * 96 + 200, 96, 96), Color.Black);
+                        }
+                    }
+                }
+                if (!Keyboard.GetState().IsKeyDown(Keys.X))
+                {
+                    pressed_x = false;
+                }
+                if (!Keyboard.GetState().IsKeyDown(Keys.Y))
+                {
+                    pressed_y = false;
+                }
             }
             //spriteBatch.Draw(Player, level_rec, Color.Black);
-            spriteBatch.Draw(pointer, new Rectangle(mousepos_x, mousepos_y, 35, 45), Color.White);
+            spriteBatch.Draw(pointer, new Rectangle(mousepos_x, mousepos_y, 35, 45), Color.White); 
 
             spriteBatch.End();
 

@@ -15,3 +15,7 @@ public class level:Game
     Rectangle dimensions;
 
 }
+public class button : Game
+{
+
+}
