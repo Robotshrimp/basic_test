@@ -79,7 +79,6 @@
     <None Include="app.manifest">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Content\BasicShape.xnb" />
     <None Include="Content\bruh.xnb" />
   </ItemGroup>
   <ItemGroup>
