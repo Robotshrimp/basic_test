@@ -79,9 +79,7 @@
     <None Include="app.manifest">
       <SubType>Designer</SubType>
     </None>
-    <None Include="Content\BasicShape.xnb" />
     <None Include="Content\bruh.xnb" />
-    <None Include="Content\not green.v3.xnb" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
