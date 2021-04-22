@@ -8,7 +8,7 @@ namespace basic_test
 {
     /// <summary>
     /// This is the main type for your game.
-    /// </summary>
+    /// </summary>       1172
     public class Game1 : Game
     {
         
@@ -43,8 +43,8 @@ namespace basic_test
 
         public Rectangle _player = new Rectangle(96, 288, 160, 80);
         Rectangle r_level = new Rectangle(0,0,0,0);
-        private int _fallspeed = -12;
-        private int _notrightspeed = -0;
+        private int y_velocityDown = -12;
+        private int x_velocityLeft = -0;
         bool debug = false;
         bool is_paused;
         bool is_in_menu = true;
@@ -58,12 +58,15 @@ namespace basic_test
         //leveleditor
 
         List<List<int>> edit_tilemap = new List<List<int>>();
-        List<List<int>> room_tilemap = new List<List<int>>();
-        List<Rectangle> rooms = new List<Rectangle>();
-        Vector2 first_point;
+        List<List<int>> edit_roomTilemap = new List<List<int>>();
+        List<Rectangle> edit_rooms = new List<Rectangle>();
+        int edit_currentRoom = 0;
+        int test_currentRoom = 0;
+        int first_pointX;
+        int first_pointY;
         int[,] test_tilemap;
-        int size_x = 10;
-        int size_y = 10;
+        int edit_sizeX = 10;
+        int edit_sizeY = 10;
         bool is_editing;
         int f = 1;
         int x_offset;
@@ -103,16 +106,16 @@ namespace basic_test
 
         //horozontal
 
-        private double accdelay = 0.1;
-        private double _timesincelastacc = 0;
+        private double t_accelerationDelay = 0.1;
+        private double C_timeSinceLastAccelerationUpdate = 0;
 
-        private double fricdelay = 0.05;
-        private double _timesincelastfric = 0;
+        private double t_fricdelay = 0.05;
+        private double C_timeSinceLastFrictionUpdate = 0;
 
         //vertical
 
-        private double jumpslowdowndelay = 0;
-        private double _timesincelastjumpslowdown = 0;
+        private double t_jumpslowdowndelay = 0;
+        private double C_timesincelastjumpslowdown = 0;
 
         private double jumpvariation_upper = 0.2;
         private double jumpvariation_lower = 0.1;
@@ -204,13 +207,13 @@ namespace basic_test
             if (!File.Exists("position_y.txt"))
                 File.WriteAllText("position_y.txt", _player.Y.ToString());
             if (!File.Exists("notrightspeed.txt"))
-                File.WriteAllText("notrightspeed.txt", _notrightspeed.ToString());
+                File.WriteAllText("notrightspeed.txt", x_velocityLeft.ToString());
             if (!File.Exists("fallspeed.txt"))
-                File.WriteAllText("fallspeed.txt", _fallspeed.ToString());
+                File.WriteAllText("fallspeed.txt", y_velocityDown.ToString());
             _player.X = int.Parse(File.ReadAllText("position_x.txt"));
             _player.Y = int.Parse(File.ReadAllText("position_y.txt"));
-            _notrightspeed = int.Parse(File.ReadAllText("notrightspeed.txt"));
-            _fallspeed = int.Parse(File.ReadAllText("fallspeed.txt")); 
+            x_velocityLeft = int.Parse(File.ReadAllText("notrightspeed.txt"));
+            y_velocityDown = int.Parse(File.ReadAllText("fallspeed.txt")); 
             tileMap = new int[,]
             {
                 {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -236,8 +239,8 @@ namespace basic_test
 
             };
 
-            f_fill(ref edit_tilemap, size_x, size_y);
-            f_fill(ref room_tilemap, size_x, size_y);
+            f_fill(ref edit_tilemap, edit_sizeX, edit_sizeY);
+            f_fill(ref edit_roomTilemap, edit_sizeX, edit_sizeY);
         }
         #region functions
         #region tile filler
@@ -302,7 +305,28 @@ namespace basic_test
                 }
             }
         }
-
+        static public void f_slope_checkII(
+            bool side_one,
+            bool side_two,
+            int tilemap,
+            ref int resistance,
+            ref bool wallcheck,
+            bool rescheck,
+            int change)
+        {
+            if (side_one
+                && side_two)
+            {
+                if (tilemap != 1)
+                {
+                    if (rescheck)
+                    {
+                        resistance = change;
+                        wallcheck = true;
+                    }
+                }
+            }
+        }
 
         #endregion
         #region squishy function
@@ -452,15 +476,13 @@ namespace basic_test
                                     {
                                         if (tile_check.X + tile_size - relivant_rectangle.X <= affected_varx)
                                         {
-                                            f_slope_check (
-                                                tile_check.Y - relivant_rectangle.Y, 
-                                                tile_size, 
-                                                (tile_check.X + tile_size - relivant_rectangle.X) * slope, 
-                                                0, player.Height, 
+                                            f_slope_checkII (
+                                                tile_check.Y - relivant_rectangle.Y + tile_size >= (tile_check.X + tile_size - relivant_rectangle.X) * slope,
+                                                tile_check.Y - relivant_rectangle.Y <= (tile_check.X + tile_size - relivant_rectangle.X) * slope + player.Height,
                                                 mapOfTiles[y, x + 1], 
                                                 ref x_restricter, ref side_touching_wall[0], 
                                                 x_restricter < tile_check.X + tile_size, 
-                                                tile_check.X + tile_size);                                            
+                                                tile_check.X + tile_size);                         
                                         }
                                         if (tile_check.Y + tile_size - relivant_rectangle.Y <= -affected_vary)
                                         {
@@ -685,7 +707,7 @@ namespace basic_test
             spriteBatch = new SpriteBatch(GraphicsDevice);
             standurdised_box = Content.Load<Texture2D>("BasicShape");
             level = Content.Load<Texture2D>("room 1");
-            pausescreen = Content.Load<Texture2D>("menu background");
+            pausescreen = Content.Load<Texture2D>("pause screen");
             pointer = Content.Load<Texture2D>("pointer");
             bar = Content.Load<Texture2D>("bar");
             grid = Content.Load<Texture2D>("grid");
@@ -693,14 +715,14 @@ namespace basic_test
 
             //temporary
 
-            b_play = Content.Load<Texture2D>("play button");
-            b_exit = Content.Load<Texture2D>("exit button");
-            b_level = Content.Load<Texture2D>("level editer button");
-            b_pause = Content.Load<Texture2D>("pause button");
-            b_menu = Content.Load<Texture2D>("menu button");
-            b_resume = Content.Load<Texture2D>("resume button");
-            b_save = Content.Load<Texture2D>("save text");
-            b_test = Content.Load<Texture2D>("test text");
+            b_play = Content.Load<Texture2D>("button/play");
+            b_exit = Content.Load<Texture2D>("button/exit");
+            b_level = Content.Load<Texture2D>("button/level editer");
+            b_pause = Content.Load<Texture2D>("button/pause");
+            b_menu = Content.Load<Texture2D>("button/menu");
+            b_resume = Content.Load<Texture2D>("button/resume");
+            b_save = Content.Load<Texture2D>("button/save");
+            b_test = Content.Load<Texture2D>("button/test");
             // TODO: use this.Content to load your game content here
         }
         
@@ -728,8 +750,8 @@ namespace basic_test
             {
                 File.WriteAllText("position_x.txt", _player.X.ToString());
                 File.WriteAllText("position_y.txt", _player.Y.ToString());
-                File.WriteAllText("notrightspeed.txt", _notrightspeed.ToString());
-                File.WriteAllText("fallspeed.txt", _fallspeed.ToString());
+                File.WriteAllText("notrightspeed.txt", x_velocityLeft.ToString());
+                File.WriteAllText("fallspeed.txt", y_velocityDown.ToString());
                 Exit();
             }
             if (!Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -783,8 +805,8 @@ namespace basic_test
             {
                 File.WriteAllText("position_x.txt", _player.X.ToString());
                 File.WriteAllText("position_y.txt", _player.Y.ToString());
-                File.WriteAllText("notrightspeed.txt", _notrightspeed.ToString());
-                File.WriteAllText("fallspeed.txt", _fallspeed.ToString());
+                File.WriteAllText("notrightspeed.txt", x_velocityLeft.ToString());
+                File.WriteAllText("fallspeed.txt", y_velocityDown.ToString());
                 Exit();
             }
             bool pressed_editor = false;
@@ -809,7 +831,7 @@ namespace basic_test
                 is_editing &
                 !pressed_testButton)
             {
-                test_tilemap = new int[size_y + 2, size_x + 2];
+                test_tilemap = new int[edit_sizeY + 2, edit_sizeX + 2];
                 for (int y = 0; y < test_tilemap.GetLength(0); y++)
                 {
                     for (int x = 0; x < test_tilemap.GetLength(1); x++)
@@ -852,30 +874,30 @@ namespace basic_test
                     {
                         if (Keyboard.GetState().IsKeyDown(Keys.LeftControl))
                         {
-                            size_x -= 10;
+                            edit_sizeX -= 10;
                         }
                         else if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
                         {
-                            size_x -= 100;
+                            edit_sizeX -= 100;
                         }
                         else
                         {
-                            size_x -= 1;
+                            edit_sizeX -= 1;
                         }
                     }
                     else
                     {
                         if (Keyboard.GetState().IsKeyDown(Keys.LeftControl))
                         {
-                            size_x += 10;
+                            edit_sizeX += 10;
                         }
                         else if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
                         {
-                            size_x += 100;
+                            edit_sizeX += 100;
                         }
                         else
                         {
-                            size_x += 1;
+                            edit_sizeX += 1;
                         }
                     }
                     pressed_x = true;
@@ -887,30 +909,30 @@ namespace basic_test
                     {
                         if (Keyboard.GetState().IsKeyDown(Keys.LeftControl))
                         {
-                            size_y -= 10;
+                            edit_sizeY -= 10;
                         }
                         else if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
                         {
-                            size_y -= 100;
+                            edit_sizeY -= 100;
                         }
                         else
                         {
-                            size_y -= 1;
+                            edit_sizeY -= 1;
                         }
                     }
                     else
                     {
                         if (Keyboard.GetState().IsKeyDown(Keys.LeftControl))
                         {
-                            size_y += 10;
+                            edit_sizeY += 10;
                         }
                         else if (Keyboard.GetState().IsKeyDown(Keys.LeftShift))
                         {
-                            size_y += 100;
+                            edit_sizeY += 100;
                         }
                         else
                         {
-                            size_y += 1;
+                            edit_sizeY += 1;
                         }
                     }
                     pressed_y = true;
@@ -940,11 +962,11 @@ namespace basic_test
                 if (Keyboard.GetState().IsKeyDown(Keys.OemMinus) &
                     test_zoom >= 20 / 96)
                 {
-                    test_zoom -= 1 / 96;
+                    test_zoom -= 0.01;
                 }
                 if (Keyboard.GetState().IsKeyDown(Keys.OemPlus))
                 {
-                    test_zoom += 1 / 96;
+                    test_zoom += 0.01;
                 }
                 if (Keyboard.GetState().IsKeyDown(Keys.F1))
                 {
@@ -960,18 +982,18 @@ namespace basic_test
                     int x = (int)((mousepos_x - x_offset) / test_zoom / 96);
                     if (f == 1)
                     {
-                        if (edit_tilemap.Count == size_y &
-                            edit_tilemap[edit_tilemap.Count - 1].Count == size_x)
+                        if (edit_tilemap.Count == edit_sizeY &
+                            edit_tilemap[edit_tilemap.Count - 1].Count == edit_sizeX)
                         {
                             if (mouseState.LeftButton == ButtonState.Pressed &
-                                y < size_y & y >= 0 &
-                                x < size_x)
+                                y < edit_sizeY & y >= 0 &
+                                x < edit_sizeX)
                             {
                                 edit_tilemap[y][x] = 1;
                             }
                             if (mouseState.RightButton == ButtonState.Pressed &
-                                y < size_y & y >= 0 &
-                                x < size_x)
+                                y < edit_sizeY & y >= 0 &
+                                x < edit_sizeX)
                             {
                                 edit_tilemap[y][x] = 0;
                             }
@@ -981,22 +1003,96 @@ namespace basic_test
                     {
                         if ((mouseState.RightButton == ButtonState.Pressed) == false)
                         {
-                            if (edit_tilemap.Count == size_y)
+                            if (edit_tilemap.Count == edit_sizeY)
                             {
-                                if (edit_tilemap[edit_tilemap.Count - 1].Count == size_x)
+                                if (edit_tilemap[edit_tilemap.Count - 1].Count == edit_sizeX)
                                 {
-                                    if (mouseState.LeftButton == ButtonState.Pressed)
+                                    if (mouseState.LeftButton == ButtonState.Pressed &
+                                        !pressed_leftMouseButton)
                                     {
-                                        if (y < size_y & y >= 0 &
-                                            x < size_x)
-                                            first_point = new Vector2(x, y);
+                                        if (y < edit_sizeY & y >= 0 &
+                                            x < edit_sizeX)
+                                        {
+                                            first_pointX = x;
+                                            first_pointY = y;
+                                        }
                                         pressed_leftMouseButton = true;
                                     }
                                     if ((mouseState.LeftButton == ButtonState.Pressed) == false)
                                     {
-                                        if (pressed_leftMouseButton)
+                                        int first_pointModifiedX = first_pointX * tilesize;
+                                        int first_pointModifiedY = first_pointY * tilesize;
+                                        Rectangle addedRectangle = new Rectangle(first_pointModifiedX, first_pointModifiedY, x * tilesize - first_pointModifiedX, y * tilesize - first_pointModifiedY);
+                                        bool overlap = false;
+                                        for (int r = edit_currentRoom; r > 0; r--)
                                         {
-
+                                            if (!(addedRectangle.X + addedRectangle.Width < edit_rooms[r].X ||
+                                                addedRectangle.X > edit_rooms[r].X + edit_rooms[r].Width &&
+                                                addedRectangle.Y + addedRectangle.Height < edit_rooms[r].Y ||
+                                                addedRectangle.Y > edit_rooms[r].Y + edit_rooms[r].Height))
+                                            {
+                                                overlap = true;
+                                            }
+                                        }
+                                        if (pressed_leftMouseButton &
+                                            x * tilesize - first_pointModifiedX >= graphics.PreferredBackBufferWidth * zoom &
+                                            y * tilesize - first_pointModifiedY >= graphics.PreferredBackBufferHeight * zoom &
+                                            overlap == false)
+                                        {
+                                            edit_rooms.Add(addedRectangle);
+                                            for(int t_y = first_pointY; t_y <= y; t_y++)
+                                            {
+                                                for (int t_x = first_pointX; t_x <= x; t_x++)
+                                                {
+                                                    if (t_y == first_pointY &
+                                                        t_x == first_pointX)
+                                                    {
+                                                        edit_roomTilemap[t_y][t_x] = 2;
+                                                    }
+                                                    else 
+                                                    if (t_y == first_pointY &
+                                                        t_x == x)
+                                                    {
+                                                        edit_roomTilemap[t_y][t_x] = 4;
+                                                    }
+                                                    else
+                                                    if (t_y == y &
+                                                        t_x == x)
+                                                    {
+                                                        edit_roomTilemap[t_y][t_x] = 6;
+                                                    }
+                                                    else
+                                                    if (t_y == y &
+                                                        t_x == first_pointX)
+                                                    {
+                                                        edit_roomTilemap[t_y][t_x] = 8;
+                                                    }
+                                                    else
+                                                    if (t_y == first_pointY)
+                                                    {
+                                                        edit_roomTilemap[t_y][t_x] = 3;
+                                                    }
+                                                    else
+                                                    if (t_x == x)
+                                                    {
+                                                        edit_roomTilemap[t_y][t_x] = 5;
+                                                    }
+                                                    else
+                                                    if (t_y == y)
+                                                    {
+                                                        edit_roomTilemap[t_y][t_x] = 7;
+                                                    }
+                                                    else
+                                                    if (t_x == first_pointX)
+                                                    {
+                                                        edit_roomTilemap[t_y][t_x] = 9;
+                                                    }
+                                                    else
+                                                    {
+                                                        edit_roomTilemap[t_y][t_x] = 1;
+                                                    }
+                                                }
+                                            }
                                         }
                                         pressed_leftMouseButton = false;
                                     }
@@ -1013,36 +1109,37 @@ namespace basic_test
             //                  MOVEMENT                  //
             //                                            //
             //--------------------------------------------//
-            #region MOVEMENT update
+            
             if (is_in_menu == false & is_paused == false & (is_editing == false || testing))
             {
+                #region MOVEMENT update
                 int[,] usedTileMap = tileMap;
-                if (testing)
+                if (false)
                 {
                     usedTileMap = test_tilemap;
                 }
                 if (_timesincelastmove >= movedelay)
                 {
-                    _collide(ref _player, tilesize, usedTileMap, ref _notrightspeed, ref _fallspeed, iscoliding);
-                    _player.X -= _notrightspeed;
-                    _player.Y += _fallspeed;
+                    _collide(ref _player, tilesize, usedTileMap, ref x_velocityLeft, ref y_velocityDown, iscoliding);
+                    _player.X -= x_velocityLeft;
+                    _player.Y += y_velocityDown;
                     _timesincelastmove = 0;
-                    if (iscoliding[0] == true & _notrightspeed > 0)
+                    if (iscoliding[0] == true & x_velocityLeft > 0)
                     {
-                        _notrightspeed = 0;
+                        x_velocityLeft = 0;
                     }
-                    if (iscoliding[1] == true & _notrightspeed < 0)
+                    if (iscoliding[1] == true & x_velocityLeft < 0)
                     {
-                        _notrightspeed = 0;
+                        x_velocityLeft = 0;
                     }
                     if (iscoliding[2] == true
                         | iscoliding[3] == true)
                     {
-                        _fallspeed = 0;
+                        y_velocityDown = 0;
                     }
                     if (iscoliding[3] == true)
                     {
-                        _fallspeed = 0;
+                        y_velocityDown = 0;
                     }
                     if (true)
                     {
@@ -1076,6 +1173,42 @@ namespace basic_test
                     0,
                     (int)((tileMap.GetLength(1) - 2) * tilesize * zoom),
                     (int)((tileMap.GetLength(0) - 5) * tilesize * zoom));
+                if (testing)
+                {
+                    r_level = edit_rooms[test_currentRoom];
+                }
+                if (false)
+                {
+                    for (int r = 0; r < edit_rooms.Capacity; r++)
+                    {
+                        if (_player.X + _player.Width < edit_rooms[r].X ||
+                            _player.X > edit_rooms[r].X + edit_rooms[r].Width &&
+                            _player.Y + _player.Height < edit_rooms[r].Y ||
+                            _player.Y > edit_rooms[r].Y + edit_rooms[r].Height)
+                        {
+                            if (r != test_currentRoom)
+                            {
+                                test_currentRoom = r;
+                                if (_player.X + _player.Width > edit_rooms[r].X)
+                                {
+                                    _player.X += (edit_rooms[r].X - _player.X) + tilesize;
+                                }
+                                if (_player.X < edit_rooms[r].X + edit_rooms[r].Width)
+                                {
+                                    _player.X -= (edit_rooms[r].X - (_player.X + _player.Width)) + tilesize;
+                                }
+                                if (_player.Y + _player.Height > edit_rooms[r].Y)
+                                {
+                                    _player.Y += (edit_rooms[r].Y - _player.Y) + tilesize;
+                                }
+                                if (_player.Y < edit_rooms[r].Y + edit_rooms[r].Height)
+                                {
+                                    _player.Y -= (edit_rooms[r].Y - (_player.Y + _player.Height)) + tilesize;
+                                }
+                            }
+                        }
+                    }
+                }
                 if (r_level.Height > graphics.PreferredBackBufferHeight)
                 {
                     wiggleroom_y = (int)((r_level.Height - graphics.PreferredBackBufferHeight) * zoom);
@@ -1158,27 +1291,27 @@ namespace basic_test
                 }
                 #endregion
                 #region HOROZONTAL MOVEMENT
-                if (_timesincelastacc > accdelay)
+                if (C_timeSinceLastAccelerationUpdate > t_accelerationDelay)
                 {
                     if (is_crouching == false
                         & wall_climb == false)
                     {
                         if (Keyboard.GetState().IsKeyDown(Keys.D)
                             & !Keyboard.GetState().IsKeyDown(Keys.A)
-                        & (_notrightspeed > -speedcap)
+                        & (x_velocityLeft > -speedcap)
                         & iscoliding[1] == false)
                         {
-                            _notrightspeed -= speed;
-                            _timesincelastacc = 0;
+                            x_velocityLeft -= speed;
+                            C_timeSinceLastAccelerationUpdate = 0;
                             iscoliding[0] = false;
                         }
                         if (Keyboard.GetState().IsKeyDown(Keys.A)
                             & !Keyboard.GetState().IsKeyDown(Keys.D)
-                        & (_notrightspeed < speedcap)
+                        & (x_velocityLeft < speedcap)
                         & iscoliding[0] == false)
                         {
-                            _notrightspeed += speed;
-                            _timesincelastacc = 0;
+                            x_velocityLeft += speed;
+                            C_timeSinceLastAccelerationUpdate = 0;
                             iscoliding[1] = false;
                         }
                     }
@@ -1189,17 +1322,17 @@ namespace basic_test
                     & Keyboard.GetState().IsKeyDown(Keys.Space)
                     & autojustpreventer == false)
                 {
-                    _fallspeed -= jumpspeed;
+                    y_velocityDown -= jumpspeed;
                     _timetilljumpslowdown = 0;
                     //_Squish(jumpspeed, jumpspeed * 2, ref _player);
                     iscoliding[3] = false;
                     if (Keyboard.GetState().IsKeyDown(Keys.D))
                     {
-                        _notrightspeed -= 5;
+                        x_velocityLeft -= 5;
                     }
                     if (Keyboard.GetState().IsKeyDown(Keys.A))
                     {
-                        _notrightspeed += 5;
+                        x_velocityLeft += 5;
                     }
                     autojustpreventer = true;
                 }
@@ -1207,40 +1340,41 @@ namespace basic_test
                     & Keyboard.GetState().IsKeyDown(Keys.Space)
                     & autojustpreventer == false)
                 {
-                    _fallspeed -= (int)(jumpspeed * 0.75);
+                    y_velocityDown -= (int)(jumpspeed * 0.75);
                     _timetilljumpslowdown = 0;
                     wall_climb = false;
                     if (iscoliding[0])
                     {
-                        _notrightspeed -= (int)(jumpspeed * 0.8);
+                        x_velocityLeft -= (int)(jumpspeed * 0.8);
+                    }
+                    if (iscoliding[0]
+                        & Keyboard.GetState().IsKeyDown(Keys.A)
+                        & !Keyboard.GetState().IsKeyDown(Keys.D))
+                    {
+                        x_velocityLeft += (int)(jumpspeed * 0.4);
+                    }
+                    if (iscoliding[0]
+                        & Keyboard.GetState().IsKeyDown(Keys.D)
+                        & !Keyboard.GetState().IsKeyDown(Keys.A))
+                    {
+                        x_velocityLeft -= (int)(jumpspeed * 0.4);
                     }
                     if (iscoliding[1])
                     {
-                        _notrightspeed += (int)(jumpspeed * 0.8);
+                        x_velocityLeft += (int)(jumpspeed * 0.8);
                     }
-                    if (iscoliding[0]
-                        & Keyboard.GetState().IsKeyDown(Keys.A)
-                        & !Keyboard.GetState().IsKeyDown(Keys.D))
-                    {
-                        _notrightspeed += (int)(jumpspeed * 0.4);
-                    }
+
                     if (iscoliding[1]
                         & Keyboard.GetState().IsKeyDown(Keys.D)
                         & !Keyboard.GetState().IsKeyDown(Keys.A))
                     {
-                        _notrightspeed -= (int)(jumpspeed * 0.4);
-                    }
-                    if (iscoliding[0]
-                        & Keyboard.GetState().IsKeyDown(Keys.D)
-                        & !Keyboard.GetState().IsKeyDown(Keys.A))
-                    {
-                        _notrightspeed -= (int)(jumpspeed * 0.4);
+                        x_velocityLeft -= (int)(jumpspeed * 0.4);
                     }
                     if (iscoliding[1]
                         & Keyboard.GetState().IsKeyDown(Keys.A)
                         & !Keyboard.GetState().IsKeyDown(Keys.D))
                     {
-                        _notrightspeed += (int)(jumpspeed * 0.4);
+                        x_velocityLeft += (int)(jumpspeed * 0.4);
                     }
                     autojustpreventer = true;
                 }
@@ -1252,111 +1386,113 @@ namespace basic_test
                 #endregion
                 #region GRAVITY
                 if (iscoliding[3] == false
-                    & _fallspeed >= -4
-                    & _fallspeed < fallcap1
+                    & y_velocityDown >= -4
+                    & y_velocityDown < fallcap1
                     & _timesincelastfallacc >= falldelay
                     & wall_climb == false)
                 {
-                    _fallspeed += gravspeed;
+                    y_velocityDown += gravspeed;
                     _timesincelastfallacc = 0;
                 }
                 if (Keyboard.GetState().IsKeyDown(Keys.S)
-                    & _fallspeed >= -4
-                    & _fallspeed < fallcap2
+                    & y_velocityDown >= -4
+                    & y_velocityDown < fallcap2
                     & _timesincelastfallacc >= falldelay
                     & iscoliding[3] == false
                     & wall_climb == false)
                 {
-                    _fallspeed += gravspeed;
+                    y_velocityDown += gravspeed;
                     _timesincelastfallacc = 0;
                 }
                 if (!Keyboard.GetState().IsKeyDown(Keys.S)
-                    & _fallspeed > fallcap1)
+                    & y_velocityDown > fallcap1)
                 {
-                    _fallspeed -= gravspeed;
+                    y_velocityDown -= gravspeed;
                 }
 
 
-                if (_fallspeed > fallcap2
+                if (y_velocityDown > fallcap2
                     & _timesincelastairrescheck < airresdelay)
                 {
-                    _fallspeed -= drag;
+                    y_velocityDown -= drag;
                     _timesincelastairrescheck = 0;
                 }
                 if ((!Keyboard.GetState().IsKeyDown(Keys.Space)
-                    & _timesincelastjumpslowdown >= jumpslowdowndelay
+                    & C_timesincelastjumpslowdown >= t_jumpslowdowndelay
                     & _timetilljumpslowdown >= jumpvariation_lower
                     || _timetilljumpslowdown >= jumpvariation_upper)
-                    & _fallspeed < 0
-                    & _timesincelastjumpslowdown >= jumpslowdowndelay)
+                    & y_velocityDown < 0
+                    & C_timesincelastjumpslowdown >= t_jumpslowdowndelay)
                 {
-                    _fallspeed += gravspeed;
-                    _timesincelastjumpslowdown = 0;
+                    y_velocityDown += gravspeed;
+                    C_timesincelastjumpslowdown = 0;
                 }
                 #endregion
                 #region FRICTION
                 if (is_crouching == true)
                 {
-                    _notrightspeed = 0;
+                    x_velocityLeft = 0;
                 }
-
+                // left
                 if (((!Keyboard.GetState().IsKeyDown(Keys.A)
                 | Keyboard.GetState().IsKeyDown(Keys.D))
-                & _notrightspeed > 0)
-                | _notrightspeed > speedcap)
+                & x_velocityLeft > 0)
+                | x_velocityLeft > speedcap)
                 {
-                    if (iscoliding[3])
+                    if (iscoliding[3] & 
+                        C_timeSinceLastFrictionUpdate > t_fricdelay)
                     {
-                        if (_notrightspeed >= friction)
+                        if (x_velocityLeft >= friction)
                         {
-                            _notrightspeed -= friction;
+                            x_velocityLeft -= friction;
                         }
                         else
                         {
-                            _notrightspeed = 0;
+                            x_velocityLeft = 0;
                         }
-                        _timesincelastfric = 0;
-                    }
-                    else
-                    {
-                        if (_notrightspeed >= drag)
-                        {
-                            _notrightspeed -= drag;
-                        }
-                        else
-                        {
-                            _notrightspeed = 0;
-                        }
-                        _timesincelastfric = 0;
-                    }
-                }
-                if (((!Keyboard.GetState().IsKeyDown(Keys.D)
-                | Keyboard.GetState().IsKeyDown(Keys.A))
-                & _notrightspeed < 0)
-                | _notrightspeed < -speedcap)
-                {
-                    if (iscoliding[3]
-                        & _timesincelastfric > fricdelay)
-                    {
-                        if (_notrightspeed <= friction)
-                        {
-                            _notrightspeed += friction;
-                        }
-                        else
-                        {
-                            _notrightspeed = 0;
-                        }
-                        _timesincelastfric = 0;
+                        C_timeSinceLastFrictionUpdate = 0;
                     }
                     else if (_timesincelastairrescheck > airresdelay)
                     {
-                        if (_notrightspeed <= drag)
+                        if (x_velocityLeft >= drag)
                         {
-                            _notrightspeed += drag;
+                            x_velocityLeft -= drag;
                         }
                         else
                         {
-                            _notrightspeed = 0;
+                            x_velocityLeft = 0;
+                        }
+                        C_timeSinceLastFrictionUpdate = 0;
+                    }
+                }
+                // right
+                if (((!Keyboard.GetState().IsKeyDown(Keys.D)
+                | Keyboard.GetState().IsKeyDown(Keys.A))
+                & x_velocityLeft < 0)
+                | x_velocityLeft < -speedcap)
+                {
+                    if (iscoliding[3] & 
+                        C_timeSinceLastFrictionUpdate > t_fricdelay)
+                    {
+                        if (x_velocityLeft <= -friction)
+                        {
+                            x_velocityLeft += friction;
+                        }
+                        else
+                        {
+                            x_velocityLeft = 0;
+                        }
+                        C_timeSinceLastFrictionUpdate = 0;
+                    }
+                    else if (_timesincelastairrescheck > airresdelay)
+                    {
+                        if (x_velocityLeft <= -drag)
+                        {
+                            x_velocityLeft += drag;
+                        }
+                        else
+                        {
+                            x_velocityLeft = 0;
                         }
                         _timesincelastairrescheck = 0;
                     }
@@ -1370,9 +1506,9 @@ namespace basic_test
                     || iscoliding[0]))
                 {
                     wall_climb = true;
-                    if (_fallspeed > 0)
+                    if (y_velocityDown > 0)
                     {
-                        _fallspeed = 0;
+                        y_velocityDown = 0;
                     }
                 }
                 else
@@ -1382,17 +1518,17 @@ namespace basic_test
                 if (wall_climb == true
                     & Keyboard.GetState().IsKeyDown(Keys.W))
                 {
-                    if (_fallspeed > climb_speed)
+                    if (y_velocityDown > climb_speed)
                     {
-                        _fallspeed = climb_speed;
+                        y_velocityDown = climb_speed;
                     }
                 }
                 if (wall_climb == true
                     & Keyboard.GetState().IsKeyDown(Keys.S))
                 {
-                    if (_fallspeed < slip_speed)
+                    if (y_velocityDown < slip_speed)
                     {
-                        _fallspeed = slip_speed;
+                        y_velocityDown = slip_speed;
                     }
 
                 }
@@ -1413,12 +1549,12 @@ namespace basic_test
                 #endregion
                 base.Update(gameTime);
                 #region timers
-                _timesincelastacc += gameTime.ElapsedGameTime.TotalSeconds;
-                _timesincelastfric += gameTime.ElapsedGameTime.TotalSeconds;
+                C_timeSinceLastAccelerationUpdate += gameTime.ElapsedGameTime.TotalSeconds;
+                C_timeSinceLastFrictionUpdate += gameTime.ElapsedGameTime.TotalSeconds;
                 _timesincelastmove += gameTime.ElapsedGameTime.TotalSeconds;
                 _timesincelastfallacc += gameTime.ElapsedGameTime.TotalSeconds;
                 _timesincelastairrescheck += gameTime.ElapsedGameTime.TotalSeconds;
-                _timesincelastjumpslowdown += gameTime.ElapsedGameTime.TotalSeconds;
+                C_timesincelastjumpslowdown += gameTime.ElapsedGameTime.TotalSeconds;
                 if (iscoliding[3] == false)
                 {
                     _timetilljumpslowdown += gameTime.ElapsedGameTime.TotalSeconds;
@@ -1441,14 +1577,8 @@ namespace basic_test
                 testing))
             {
                 int variation = 0;
-                int x = (int)((_player.X - 96) / 12) * 12;
+                int x = (int)((_player.X - tilesize) / 12) * 12;
                 int y = (int)((_player.Y) / 12) * 12;
-                variation = 192;
-                if (false)
-                {
-                    y = (int)((_player.Y + 480) / 12) * 12;
-                    variation = 192;
-                }
                 if (testing == false)
                 {
                     spriteBatch.Draw(level, new Rectangle(
@@ -1458,7 +1588,7 @@ namespace basic_test
                         r_level.Height),
                         Color.White);
                     spriteBatch.Draw(standurdised_box, new Rectangle(
-                        (int)((x - tilesize) * zoom - x_offset),
+                        (int)((x) * zoom - x_offset),
                         (int)((y - tilesize * 4) * zoom - y_offset),
                         (int)(_player.Width * zoom),
                         (int)(_player.Height * zoom)),
@@ -1468,22 +1598,22 @@ namespace basic_test
                 {
                     spriteBatch.Draw(standurdised_box, new Rectangle(
                         (int)((x) * test_zoom + x_offset),
-                        (int)((y - 96) * test_zoom + y_offset + 192),
+                        (int)((y - tilesize) * test_zoom + y_offset + 192),
                         (int)(_player.Width * test_zoom),
                         (int)(_player.Height * test_zoom)),
                         Color.White);
                 }
                 SpriteFont font;
-                font = Content.Load<SpriteFont>("bruh");
+                font = Content.Load<SpriteFont>("Font");
                 if (debug)
                 {
                     spriteBatch.DrawString(font, "x :" + _player.X + "  Y :" + (_player.Y + _player.Height), new Vector2(50, 50 + variation), Color.White);
                     spriteBatch.DrawString(font, "bot :" + iscoliding[3] + "  top :" + iscoliding[2], new Vector2(50, 70 + variation), Color.White);    
                     spriteBatch.DrawString(font, "lef :" + iscoliding[0] + "  rit :" + iscoliding[1], new Vector2(50, 90 + variation), Color.White);
-                    spriteBatch.DrawString(font, "x-speed :" + _notrightspeed + "  Y-speed :" + _fallspeed, new Vector2(50, 110 + variation), Color.White);
+                    spriteBatch.DrawString(font, "x-speed :" + x_velocityLeft + "  Y-speed :" + y_velocityDown, new Vector2(50, 110 + variation), Color.White);
                     spriteBatch.DrawString(font, "camra_move_x :" + camera_move_x + "  camera_move_y :" + camera_move_y, new Vector2(50, 130 + variation), Color.White);
                     spriteBatch.DrawString(font, "temp 1 :" + y + "  temp 2 :" + test_zoom, new Vector2(50, 150 + variation), Color.White);
-                    spriteBatch.DrawString(font, "temp 3 :" + (y * test_zoom) + "  temp 4 :" + ((int)(11 * 96 * test_zoom) + 192 + y_offset), new Vector2(50, 170 + variation), Color.White);
+                    spriteBatch.DrawString(font, "temp 3 :" + testing + "  temp 4 :" + ((int)(11 * 96 * test_zoom) + 192 + y_offset), new Vector2(50, 170 + variation), Color.White);
                 }
             }
             if (is_paused & 
@@ -1505,16 +1635,16 @@ namespace basic_test
             }
             if (is_editing)
             {
-                f_fill(ref edit_tilemap, size_x, size_y);
-                for (int y = 0; y < size_y; y ++)
+                f_fill(ref edit_tilemap, edit_sizeX, edit_sizeY);
+                for (int y = 0; y < edit_sizeY; y ++)
                 {
-                    for (int x = 0; x < size_x; x++)
+                    for (int x = 0; x < edit_sizeX; x++)
                     {
                         Rectangle grid_tile = new Rectangle(
-                            (int)(x * 96 * test_zoom) + x_offset,
-                            (int)(y * 96 * test_zoom) + 192 + y_offset,
-                            (int)(96 * test_zoom),
-                            (int)(96 * test_zoom));
+                            (int)(x * tilesize * test_zoom) + x_offset,
+                            (int)(y * tilesize * test_zoom) + 192 + y_offset,
+                            (int)(tilesize * test_zoom),
+                            (int)(tilesize * test_zoom));
                         if (edit_tilemap[y][x] == 0)
                         {
                             spriteBatch.Draw(grid, 
@@ -1531,78 +1661,78 @@ namespace basic_test
                 }
                 if (f == 2)
                 {
-                    f_fill(ref room_tilemap, size_x, size_y);
-                    for (int y = 0; y < size_y; y++)
+                    f_fill(ref edit_roomTilemap, edit_sizeX, edit_sizeY);
+                    for (int y = 0; y < edit_sizeY; y++)
                     {
-                        for (int x = 0; x < size_x; x++)
+                        for (int x = 0; x < edit_sizeX; x++)
                         {
                             Rectangle grid_tile = new Rectangle(
-                                (int)(x * 96 * test_zoom) + x_offset,
-                                (int)(y * 96 * test_zoom) + 192 + y_offset,
-                                (int)(96 * test_zoom),
-                                (int)(96 * test_zoom));
-                            if (edit_tilemap[y][x] == 1)
+                                (int)(x * tilesize * test_zoom) + x_offset,
+                                (int)(y * tilesize * test_zoom) + 192 + y_offset,
+                                (int)(tilesize * test_zoom),
+                                (int)(tilesize * test_zoom));
+                            if (edit_roomTilemap[y][x] == 1)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
                                     new Rectangle(16, 16, 16, 16),
-                                    Color.Black);
+                                    Color.Green);
                             }
-                            if (edit_tilemap[y][x] == 2)
+                            if (edit_roomTilemap[y][x] == 2)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
                                     new Rectangle(0, 0, 16, 16),
-                                    Color.Black);
+                                    Color.Green);
                             }
-                            if (edit_tilemap[y][x] == 3)
+                            if (edit_roomTilemap[y][x] == 3)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
                                     new Rectangle(16, 0, 16, 16),
-                                    Color.Black);
+                                    Color.Green);
                             }
-                            if (edit_tilemap[y][x] == 4)
+                            if (edit_roomTilemap[y][x] == 4)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
                                     new Rectangle(32, 0, 16, 16),
-                                    Color.Black);
+                                    Color.Green);
                             }
-                            if (edit_tilemap[y][x] == 5)
+                            if (edit_roomTilemap[y][x] == 5)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
                                     new Rectangle(32, 16, 16, 16),
-                                    Color.Black);
+                                    Color.Green);
                             }
-                            if (edit_tilemap[y][x] == 6)
+                            if (edit_roomTilemap[y][x] == 6)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
                                     new Rectangle(32, 32, 16, 16),
-                                    Color.Black);
+                                    Color.Green);
                             }
-                            if (edit_tilemap[y][x] == 7)
+                            if (edit_roomTilemap[y][x] == 7)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
                                     new Rectangle(16, 32, 16, 16),
-                                    Color.Black);
+                                    Color.Green);
                             }
-                            if (edit_tilemap[y][x] == 8)
+                            if (edit_roomTilemap[y][x] == 8)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
                                     new Rectangle(0, 32, 16, 16),
-                                    Color.Black);
+                                    Color.Green);
                             }
-                            if (edit_tilemap[y][x] == 9)
+                            if (edit_roomTilemap[y][x] == 9)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
                                     new Rectangle(0, 16, 16, 16),
-                                    Color.Black);
+                                    Color.Green);
                             }
                         }
                     }
