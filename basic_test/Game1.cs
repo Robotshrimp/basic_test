@@ -15,7 +15,7 @@ namespace basic_test
         #region variables
         int[,] tileMap;
         double zoom = 1;
-        double test_zoom = 1;
+        double edit_zoom = 1;
         int tilesize = 96;
         bool is_crouching = false;
         GraphicsDeviceManager graphics;
@@ -75,6 +75,7 @@ namespace basic_test
 
         //key press
 
+        List<bool> pressed = new List<bool>();
         bool pressed_escape;
         bool pressed_M;
         bool pressed_x;
@@ -94,7 +95,7 @@ namespace basic_test
         
         private int fallcap1 = 18;
         private int fallcap2 = 24;
-        private int drag = 1;
+        private int drag = 2;
         private int gravspeed = 3;
         private int jumpspeed = 20;
         private bool autojustpreventer = false;
@@ -213,7 +214,7 @@ namespace basic_test
             _player.X = int.Parse(File.ReadAllText("position_x.txt"));
             _player.Y = int.Parse(File.ReadAllText("position_y.txt"));
             x_velocityLeft = int.Parse(File.ReadAllText("notrightspeed.txt"));
-            y_velocityDown = int.Parse(File.ReadAllText("fallspeed.txt")); 
+            y_velocityDown = int.Parse(File.ReadAllText("fallspeed.txt"));
             tileMap = new int[,]
             {
                 {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -960,13 +961,13 @@ namespace basic_test
                     }
                 }
                 if (Keyboard.GetState().IsKeyDown(Keys.OemMinus) &
-                    test_zoom >= 20 / 96)
+                    edit_zoom >= 20 / 96)
                 {
-                    test_zoom -= 0.01;
+                    edit_zoom -= 0.01;
                 }
                 if (Keyboard.GetState().IsKeyDown(Keys.OemPlus))
                 {
-                    test_zoom += 0.01;
+                    edit_zoom += 0.01;
                 }
                 if (Keyboard.GetState().IsKeyDown(Keys.F1))
                 {
@@ -978,8 +979,8 @@ namespace basic_test
                 }
                 if (!testing)
                 {
-                    int y = (int)(((mousepos_y - y_offset) - 192) / (96 * test_zoom));
-                    int x = (int)((mousepos_x - x_offset) / test_zoom / 96);
+                    int y = (int)(((mousepos_y - y_offset) - 192) / (96 * edit_zoom));
+                    int x = (int)((mousepos_x - x_offset) / edit_zoom / 96);
                     if (f == 1)
                     {
                         if (edit_tilemap.Count == edit_sizeY &
@@ -1022,7 +1023,7 @@ namespace basic_test
                                     {
                                         int first_pointModifiedX = first_pointX * tilesize;
                                         int first_pointModifiedY = first_pointY * tilesize;
-                                        Rectangle addedRectangle = new Rectangle(first_pointModifiedX, first_pointModifiedY, x * tilesize - first_pointModifiedX, y * tilesize - first_pointModifiedY);
+                                        Rectangle addedRectangle = new Rectangle(first_pointModifiedX, first_pointModifiedY, x * tilesize - first_pointModifiedX + tilesize, y * tilesize - first_pointModifiedY + tilesize + 192);
                                         bool overlap = false;
                                         for (int r = edit_currentRoom; r > 0; r--)
                                         {
@@ -1099,7 +1100,6 @@ namespace basic_test
                                 }
                             }
                         }
-
                     }
                 }
             }
@@ -1114,7 +1114,7 @@ namespace basic_test
             {
                 #region MOVEMENT update
                 int[,] usedTileMap = tileMap;
-                if (false)
+                if (testing)
                 {
                     usedTileMap = test_tilemap;
                 }
@@ -1177,18 +1177,18 @@ namespace basic_test
                 {
                     r_level = edit_rooms[test_currentRoom];
                 }
-                if (false)
+                if (testing)
                 {
-                    for (int r = 0; r < edit_rooms.Capacity; r++)
+                    for (int r = 0; r < edit_rooms.Count - 1; r++)
                     {
-                        if (_player.X + _player.Width < edit_rooms[r].X ||
-                            _player.X > edit_rooms[r].X + edit_rooms[r].Width &&
-                            _player.Y + _player.Height < edit_rooms[r].Y ||
-                            _player.Y > edit_rooms[r].Y + edit_rooms[r].Height)
+                        if (_player.X + _player.Width > edit_rooms[r].X &
+                            _player.X < edit_rooms[r].X + edit_rooms[r].Width &&
+                            _player.Y + _player.Height > edit_rooms[r].Y &
+                            _player.Y < edit_rooms[r].Y + edit_rooms[r].Height &
+                            r != test_currentRoom)
                         {
-                            if (r != test_currentRoom)
+                            if (false)
                             {
-                                test_currentRoom = r;
                                 if (_player.X + _player.Width > edit_rooms[r].X)
                                 {
                                     _player.X += (edit_rooms[r].X - _player.X) + tilesize;
@@ -1206,51 +1206,55 @@ namespace basic_test
                                     _player.Y -= (edit_rooms[r].Y - (_player.Y + _player.Height)) + tilesize;
                                 }
                             }
+
+                            test_currentRoom = r;
                         }
                     }
                 }
+                if (edit_currentRoom == 1)
+                    Exit();
                 if (r_level.Height > graphics.PreferredBackBufferHeight)
                 {
                     wiggleroom_y = (int)((r_level.Height - graphics.PreferredBackBufferHeight) * zoom);
                     if (r_level.Y - camera_moveTo_y < 0
-                        & camera_moveTo_y > (int)((_player.Y - tilesize * 4 + _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2)
+                        & camera_moveTo_y > (int)((_player.Y + _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2)
                     {
-                        camera_moveTo_y = (int)((_player.Y - tilesize * 4 + _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2;
+                        camera_moveTo_y = (int)((_player.Y + _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2;
                     }
                     if (r_level.Y - camera_moveTo_y + r_level.Height > graphics.PreferredBackBufferHeight
-                        & camera_moveTo_y < (int)((_player.Y - tilesize * 4 + _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2)
+                        & camera_moveTo_y < (int)((_player.Y + _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2)
                     {
-                        camera_moveTo_y = (int)((_player.Y - tilesize * 4 + _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2;
+                        camera_moveTo_y = (int)((_player.Y + _player.Height / 2) * zoom) - graphics.PreferredBackBufferHeight / 2;
                     }
                     if (camera_moveTo_y < 0)
                     {
                         camera_moveTo_y = 0;
                     }
-                    if (camera_moveTo_y > wiggleroom_y / 2)
+                    if (camera_moveTo_y > wiggleroom_y)
                     {
-                        camera_moveTo_y = wiggleroom_y / 2;
+                        camera_moveTo_y = wiggleroom_y;
                     }
                 }
                 if (r_level.Width > graphics.PreferredBackBufferWidth)
                 {
                     wiggleroom_x = (int)((r_level.Width - graphics.PreferredBackBufferWidth) * zoom);
                     if (r_level.X - camera_moveTo_x < 0
-                        & camera_moveTo_x > (int)((_player.X - tilesize - _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2)
+                        & camera_moveTo_x > (int)((_player.X  + _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2)
                     {
-                        camera_moveTo_x = (int)((_player.X - tilesize - _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2;
+                        camera_moveTo_x = (int)((_player.X + _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2;
                     }
                     if (r_level.X - camera_moveTo_x + r_level.Width > graphics.PreferredBackBufferWidth
-                        & camera_moveTo_x < (int)((_player.X - tilesize - _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2)
+                        & camera_moveTo_x < (int)((_player.X + _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2)
                     {
-                        camera_moveTo_x = (int)((_player.X - tilesize - _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2;
+                        camera_moveTo_x = (int)((_player.X + _player.Width / 2) * zoom) - graphics.PreferredBackBufferWidth / 2;
                     }
                     if (camera_moveTo_x < 0)
                     {
                         camera_moveTo_x = 0;
                     }
-                    if (camera_moveTo_x > wiggleroom_x / 2)
+                    if (camera_moveTo_x > wiggleroom_x)
                     {
-                        camera_moveTo_x = wiggleroom_x / 2;
+                        camera_moveTo_x = wiggleroom_x;
                     }
                 }
                 // TODO: 
@@ -1462,7 +1466,7 @@ namespace basic_test
                         {
                             x_velocityLeft = 0;
                         }
-                        C_timeSinceLastFrictionUpdate = 0;
+                        _timesincelastairrescheck = 0;
                     }
                 }
                 // right
@@ -1570,6 +1574,23 @@ namespace basic_test
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
+            double used_zoom;
+            if (testing)
+                used_zoom = zoom;
+            else
+                used_zoom = edit_zoom;
+            int offsetY;
+            int offsetX;
+            if (testing || !is_editing)
+            {
+                offsetX = camera_move_x;
+                offsetY = camera_move_y;
+            }
+            else
+            {
+                offsetX = -x_offset;
+                offsetY = -y_offset;
+            }
             GraphicsDevice.Clear(Color.Black);
             spriteBatch.Begin();
             if (is_in_menu == false & 
@@ -1582,27 +1603,22 @@ namespace basic_test
                 if (testing == false)
                 {
                     spriteBatch.Draw(level, new Rectangle(
-                        (int)((r_level.X * zoom) - camera_move_x),
-                        (int)((r_level.Y * zoom) - camera_move_y),
+                        (int)((r_level.X * zoom) - offsetX),
+                        (int)((r_level.Y * zoom) - offsetY),
                         r_level.Width,
                         r_level.Height),
-                        Color.White);
-                    spriteBatch.Draw(standurdised_box, new Rectangle(
-                        (int)((x) * zoom - x_offset),
-                        (int)((y - tilesize * 4) * zoom - y_offset),
-                        (int)(_player.Width * zoom),
-                        (int)(_player.Height * zoom)),
                         Color.White);
                 }
                 else
                 {
                     spriteBatch.Draw(standurdised_box, new Rectangle(
-                        (int)((x) * test_zoom + x_offset),
-                        (int)((y - tilesize) * test_zoom + y_offset + 192),
-                        (int)(_player.Width * test_zoom),
-                        (int)(_player.Height * test_zoom)),
+                        (int)((x) * used_zoom - offsetX),
+                        (int)((y - tilesize) * used_zoom - offsetY + 192),
+                        (int)(_player.Width * used_zoom),
+                        (int)(_player.Height * used_zoom)),
                         Color.White);
-                }
+                }   
+
                 SpriteFont font;
                 font = Content.Load<SpriteFont>("Font");
                 if (debug)
@@ -1612,8 +1628,8 @@ namespace basic_test
                     spriteBatch.DrawString(font, "lef :" + iscoliding[0] + "  rit :" + iscoliding[1], new Vector2(50, 90 + variation), Color.White);
                     spriteBatch.DrawString(font, "x-speed :" + x_velocityLeft + "  Y-speed :" + y_velocityDown, new Vector2(50, 110 + variation), Color.White);
                     spriteBatch.DrawString(font, "camra_move_x :" + camera_move_x + "  camera_move_y :" + camera_move_y, new Vector2(50, 130 + variation), Color.White);
-                    spriteBatch.DrawString(font, "temp 1 :" + y + "  temp 2 :" + test_zoom, new Vector2(50, 150 + variation), Color.White);
-                    spriteBatch.DrawString(font, "temp 3 :" + testing + "  temp 4 :" + ((int)(11 * 96 * test_zoom) + 192 + y_offset), new Vector2(50, 170 + variation), Color.White);
+                    spriteBatch.DrawString(font, "temp 1 :" + graphics.PreferredBackBufferWidth + "  temp 2 :" + level.Width, new Vector2(50, 150 + variation), Color.White);
+                    spriteBatch.DrawString(font, "temp 3 :" + graphics.PreferredBackBufferHeight + "  temp 4 :" + level.Width, new Vector2(50, 170 + variation), Color.White);
                 }
             }
             if (is_paused & 
@@ -1641,10 +1657,10 @@ namespace basic_test
                     for (int x = 0; x < edit_sizeX; x++)
                     {
                         Rectangle grid_tile = new Rectangle(
-                            (int)(x * tilesize * test_zoom) + x_offset,
-                            (int)(y * tilesize * test_zoom) + 192 + y_offset,
-                            (int)(tilesize * test_zoom),
-                            (int)(tilesize * test_zoom));
+                            (int)(x * tilesize * used_zoom) - offsetX,
+                            (int)(y * tilesize * used_zoom) + 192 - offsetY,
+                            (int)(tilesize * used_zoom),
+                            (int)(tilesize * used_zoom));
                         if (edit_tilemap[y][x] == 0)
                         {
                             spriteBatch.Draw(grid, 
@@ -1667,10 +1683,10 @@ namespace basic_test
                         for (int x = 0; x < edit_sizeX; x++)
                         {
                             Rectangle grid_tile = new Rectangle(
-                                (int)(x * tilesize * test_zoom) + x_offset,
-                                (int)(y * tilesize * test_zoom) + 192 + y_offset,
-                                (int)(tilesize * test_zoom),
-                                (int)(tilesize * test_zoom));
+                                (int)(x * tilesize * used_zoom) - offsetX,
+                                (int)(y * tilesize * used_zoom) + 192 - offsetY,
+                                (int)(tilesize * used_zoom),
+                                (int)(tilesize * used_zoom));
                             if (edit_roomTilemap[y][x] == 1)
                             {
                                 spriteBatch.Draw(transparent,
