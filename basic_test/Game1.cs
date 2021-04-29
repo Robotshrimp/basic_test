@@ -211,10 +211,13 @@ namespace basic_test
                 File.WriteAllText("notrightspeed.txt", x_velocityLeft.ToString());
             if (!File.Exists("fallspeed.txt"))
                 File.WriteAllText("fallspeed.txt", y_velocityDown.ToString());
-            _player.X = int.Parse(File.ReadAllText("position_x.txt"));
-            _player.Y = int.Parse(File.ReadAllText("position_y.txt"));
-            x_velocityLeft = int.Parse(File.ReadAllText("notrightspeed.txt"));
-            y_velocityDown = int.Parse(File.ReadAllText("fallspeed.txt"));
+            if (false)
+            {
+                _player.X = int.Parse(File.ReadAllText("position_x.txt"));
+                _player.Y = int.Parse(File.ReadAllText("position_y.txt"));
+                x_velocityLeft = int.Parse(File.ReadAllText("notrightspeed.txt"));
+                y_velocityDown = int.Parse(File.ReadAllText("fallspeed.txt"));
+            }
             tileMap = new int[,]
             {
                 {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -1184,8 +1187,7 @@ namespace basic_test
                         if (_player.X + _player.Width > edit_rooms[r].X &
                             _player.X < edit_rooms[r].X + edit_rooms[r].Width &&
                             _player.Y + _player.Height > edit_rooms[r].Y &
-                            _player.Y < edit_rooms[r].Y + edit_rooms[r].Height &
-                            r != test_currentRoom)
+                            _player.Y < edit_rooms[r].Y + edit_rooms[r].Height)
                         {
                             if (false)
                             {
@@ -1597,16 +1599,21 @@ namespace basic_test
                 (is_editing == false ||
                 testing))
             {
-                int variation = 0;
                 int x = (int)((_player.X - tilesize) / 12) * 12;
                 int y = (int)((_player.Y) / 12) * 12;
                 if (testing == false)
                 {
                     spriteBatch.Draw(level, new Rectangle(
-                        (int)((r_level.X * zoom) - offsetX),
-                        (int)((r_level.Y * zoom) - offsetY),
+                        (int)((r_level.X * used_zoom) - offsetX),
+                        (int)((r_level.Y * used_zoom) - offsetY),
                         r_level.Width,
                         r_level.Height),
+                        Color.White);
+                    spriteBatch.Draw(standurdised_box, new Rectangle(
+                        (int)((x) * used_zoom - offsetX),
+                        (int)((y - tilesize) * used_zoom - offsetY - tilesize * 3),
+                        (int)(_player.Width * used_zoom),
+                        (int)(_player.Height * used_zoom)),
                         Color.White);
                 }
                 else
@@ -1618,19 +1625,6 @@ namespace basic_test
                         (int)(_player.Height * used_zoom)),
                         Color.White);
                 }   
-
-                SpriteFont font;
-                font = Content.Load<SpriteFont>("Font");
-                if (debug)
-                {
-                    spriteBatch.DrawString(font, "x :" + _player.X + "  Y :" + (_player.Y + _player.Height), new Vector2(50, 50 + variation), Color.White);
-                    spriteBatch.DrawString(font, "bot :" + iscoliding[3] + "  top :" + iscoliding[2], new Vector2(50, 70 + variation), Color.White);    
-                    spriteBatch.DrawString(font, "lef :" + iscoliding[0] + "  rit :" + iscoliding[1], new Vector2(50, 90 + variation), Color.White);
-                    spriteBatch.DrawString(font, "x-speed :" + x_velocityLeft + "  Y-speed :" + y_velocityDown, new Vector2(50, 110 + variation), Color.White);
-                    spriteBatch.DrawString(font, "camra_move_x :" + camera_move_x + "  camera_move_y :" + camera_move_y, new Vector2(50, 130 + variation), Color.White);
-                    spriteBatch.DrawString(font, "temp 1 :" + graphics.PreferredBackBufferWidth + "  temp 2 :" + level.Width, new Vector2(50, 150 + variation), Color.White);
-                    spriteBatch.DrawString(font, "temp 3 :" + graphics.PreferredBackBufferHeight + "  temp 4 :" + level.Width, new Vector2(50, 170 + variation), Color.White);
-                }
             }
             if (is_paused & 
                 is_in_menu == false &
@@ -1765,6 +1759,19 @@ namespace basic_test
                 {
                     pressed_y = false;
                 }
+            }
+            int variation = 192;
+            SpriteFont font;
+            font = Content.Load<SpriteFont>("Font");
+            if (true)
+            {
+                spriteBatch.DrawString(font, "x :" + _player.X + "  Y :" + (_player.Y + _player.Height), new Vector2(50, 50 + variation), Color.White);
+                spriteBatch.DrawString(font, "bot :" + iscoliding[3] + "  top :" + iscoliding[2], new Vector2(50, 70 + variation), Color.White);
+                spriteBatch.DrawString(font, "lef :" + iscoliding[0] + "  rit :" + iscoliding[1], new Vector2(50, 90 + variation), Color.White);
+                spriteBatch.DrawString(font, "x-speed :" + x_velocityLeft + "  Y-speed :" + y_velocityDown, new Vector2(50, 110 + variation), Color.White);
+                spriteBatch.DrawString(font, "camra_move_x :" + camera_move_x + "  camera_move_y :" + camera_move_y, new Vector2(50, 130 + variation), Color.White);
+                spriteBatch.DrawString(font, "temp 1 :" + graphics.PreferredBackBufferWidth + "  temp 2 :" + level.Width, new Vector2(50, 150 + variation), Color.White);
+                spriteBatch.DrawString(font, "temp 3 :" + test_currentRoom + "  temp 4 :" + r_level.X, new Vector2(50, 170 + variation), Color.White);
             }
             //spriteBatch.Draw(Player, level_rec, Color.Black);
             spriteBatch.Draw(pointer, new Rectangle(mousepos_x, mousepos_y, 35, 45), Color.White); 
