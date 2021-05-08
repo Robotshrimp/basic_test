@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.Serialization;
 
 namespace basic_test
 {
@@ -18,6 +19,7 @@ namespace basic_test
         double edit_zoom = 1;
         int tilesize = 96;
         bool is_crouching = false;
+        bool exiting = false;
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         MouseState mouseState;
@@ -72,7 +74,8 @@ namespace basic_test
         int x_offset;
         int y_offset;
 
-
+        string amgus = "imposter";
+        string full;
         //key press
 
         List<bool> pressed = new List<bool>();
@@ -218,6 +221,7 @@ namespace basic_test
                 x_velocityLeft = int.Parse(File.ReadAllText("notrightspeed.txt"));
                 y_velocityDown = int.Parse(File.ReadAllText("fallspeed.txt"));
             }
+            full = amgus + "sus";
             tileMap = new int[,]
             {
                 {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -242,7 +246,6 @@ namespace basic_test
                 {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
 
             };
-
             f_fill(ref edit_tilemap, edit_sizeX, edit_sizeY);
             f_fill(ref edit_roomTilemap, edit_sizeX, edit_sizeY);
         }
@@ -300,6 +303,38 @@ namespace basic_test
             ref affected_vary,
             side_touching_wall);
         }
+        static public void mapsave(
+            int[,] map,
+            string file)
+        {
+
+            string filecontent = "";
+            for (int y = 0; y < map.GetLength(0); y++)
+            {
+                for (int x = 0; x < map.GetLength(1); x++)
+                {
+                    filecontent = filecontent + map[y, x];
+                    if (x != map.GetLength(1) - 1)
+                        filecontent = filecontent + " ";
+                }
+                if (y != map.GetLength(0) - 1)
+                    filecontent = filecontent + ",\n";
+            }
+            File.WriteAllText(file, filecontent);
+        }
+        static public void mapget(
+            string file,
+            int[,] map)
+        {
+            string filecontent = File.ReadAllText(file);
+            string[] split = filecontent.Split(',');
+            string[] length = split[0].Split(' ');
+            string[,] textmap = new string [split.GetLength(0), length.GetLength(0)];
+            for (int y = 0; y < split.GetLength(0); y++)
+            {
+
+            }
+        }
         #endregion
 
 
@@ -351,12 +386,13 @@ namespace basic_test
             mouseState = Mouse.GetState();
             mousepos_x = mouseState.X;
             mousepos_y = mouseState.Y;
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.C))
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.C)|| exiting)
             {
                 File.WriteAllText("position_x.txt", _player.X.ToString());
                 File.WriteAllText("position_y.txt", _player.Y.ToString());
                 File.WriteAllText("notrightspeed.txt", x_velocityLeft.ToString());
                 File.WriteAllText("fallspeed.txt", y_velocityDown.ToString());
+                mapsave(test_tilemap, "test.txt");
                 Exit();
             }
             if (!Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -408,11 +444,7 @@ namespace basic_test
                 is_in_menu &
                 !is_editing)
             {
-                File.WriteAllText("position_x.txt", _player.X.ToString());
-                File.WriteAllText("position_y.txt", _player.Y.ToString());
-                File.WriteAllText("notrightspeed.txt", x_velocityLeft.ToString());
-                File.WriteAllText("fallspeed.txt", y_velocityDown.ToString());
-                Exit();
+                exiting = true;
             }
             bool pressed_editor = false;
             f_button(level_editer, ref pressed_editor);
