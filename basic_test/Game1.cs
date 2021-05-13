@@ -48,9 +48,7 @@ namespace basic_test
         private int y_velocityDown = -12;
         private int x_velocityLeft = -0;
         bool debug = false;
-        bool is_paused;
-        bool is_in_menu = true;
-        bool testing;
+        string gamestate = "menu";
         int wiggleroom_x = 0;
         int wiggleroom_y = 0;
         int camera_moveTo_x = 0;
@@ -69,18 +67,13 @@ namespace basic_test
         int[,] test_tilemap;
         int edit_sizeX = 10;
         int edit_sizeY = 10;
-        bool is_editing;
         int f = 1;
         int x_offset;
         int y_offset;
-
-        string amgus = "imposter";
-        string full;
         //key press
 
         List<bool> pressed = new List<bool>();
         bool pressed_escape;
-        bool pressed_M;
         bool pressed_x;
         bool pressed_y;
         bool pressed_testButton;
@@ -152,15 +145,6 @@ namespace basic_test
             false,
             false
         };
-
-
-
-
-
-
-
-
-
         Rectangle paused;
         Rectangle menu;
         Rectangle resume;
@@ -214,6 +198,9 @@ namespace basic_test
                 File.WriteAllText("notrightspeed.txt", x_velocityLeft.ToString());
             if (!File.Exists("fallspeed.txt"))
                 File.WriteAllText("fallspeed.txt", y_velocityDown.ToString());
+            //listget("rooms.txt", ref edit_roomTilemap);
+            listget("list.txt", ref edit_tilemap, ref edit_sizeX, ref edit_sizeY);
+            listget("rooms.txt", ref edit_roomTilemap, ref edit_sizeX, ref edit_sizeY);
             if (true)
             {
                 _player.X = int.Parse(File.ReadAllText("position_x.txt"));
@@ -221,7 +208,6 @@ namespace basic_test
                 x_velocityLeft = int.Parse(File.ReadAllText("notrightspeed.txt"));
                 y_velocityDown = int.Parse(File.ReadAllText("fallspeed.txt"));
             }
-            full = amgus + "sus";
             tileMap = new int[,]
             {
                 {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -246,8 +232,6 @@ namespace basic_test
                 {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
 
             };
-            f_fill(ref edit_tilemap, edit_sizeX, edit_sizeY);
-            f_fill(ref edit_roomTilemap, edit_sizeX, edit_sizeY);
         }
         #region functions
         #region tile filler
@@ -303,6 +287,7 @@ namespace basic_test
             ref affected_vary,
             side_touching_wall);
         }
+        #region int array
         static public void mapsave(
             int[,] map,
             string file)
@@ -324,17 +309,64 @@ namespace basic_test
         }
         static public void mapget(
             string file,
-            int[,] map)
+            ref int[,] map)
         {
             string filecontent = File.ReadAllText(file);
             string[] split = filecontent.Split(',');
-            string[] length = split[0].Split(' ');
-            string[,] textmap = new string [split.GetLength(0), length.GetLength(0)];
+            string[] yAxisValue = split[0].Split(' ');
+            map = new int[split.GetLength(0), yAxisValue.GetLength(0)];
             for (int y = 0; y < split.GetLength(0); y++)
             {
-
+                yAxisValue = split[y].Split(' ');
+                for (int x = 0; x < yAxisValue.GetLength(0); x++)
+                {
+                    map[y, x] = int.Parse(yAxisValue[x]);
+                }
             }
         }
+        #endregion
+        #region list array
+        static public void listsave(
+            List<List<int>> map,
+            string file)
+        {
+
+            string filecontent = "";
+            for (int y = 0; y < map.Capacity; y++)
+            {
+                for (int x = 0; x < map[0].Capacity; x++)
+                {
+                    filecontent = filecontent + map[y][x];
+                    if (x != map[0].Capacity - 1)
+                        filecontent = filecontent + " ";
+                }
+                if (y != map.Capacity - 1)
+                    filecontent = filecontent + ",\n";
+            }
+            File.WriteAllText(file, filecontent);
+        }
+        static public void listget(
+            string file,
+            ref List<List<int>> map,
+            ref int sizeX,
+            ref int sizeY)
+        {
+            string filecontent = File.ReadAllText(file);
+            string[] split = filecontent.Split(',');
+            string[] yAxisValue = split[0].Split(' ');
+            sizeX = yAxisValue.GetLength(0);
+            sizeY = split.GetLength(0);
+            f_fill(ref map, sizeX, sizeY);
+            for (int y = 0; y < split.GetLength(0); y++)
+            {
+                yAxisValue = split[y].Split(' ');
+                for (int x = 0; x < yAxisValue.GetLength(0); x++)
+                {
+                    map[y][x] = int.Parse(yAxisValue[x]);
+                }
+            }
+        }
+        #endregion
         #endregion
 
 
@@ -392,80 +424,89 @@ namespace basic_test
                 File.WriteAllText("position_y.txt", _player.Y.ToString());
                 File.WriteAllText("notrightspeed.txt", x_velocityLeft.ToString());
                 File.WriteAllText("fallspeed.txt", y_velocityDown.ToString());
-                mapsave(test_tilemap, "test.txt");
+                listsave(edit_roomTilemap, "rooms.txt");
+                listsave(edit_tilemap, "list.txt");
                 Exit();
             }
             if (!Keyboard.GetState().IsKeyDown(Keys.Escape))
                 pressed_escape = false;
-            if (!Keyboard.GetState().IsKeyDown(Keys.M))
-                pressed_M = false;
+            switch (gamestate)
+            {
+                case "menu":
+                    break;
+                case "paused":
+                    break;
+                case "editing":
+                    break;
+                case "playing":
+                    break;
+                default:
+                    break;
+            }
             if (Keyboard.GetState().IsKeyDown(Keys.Escape) & pressed_escape == false)
             {
-                if (is_paused == true)
-                    is_paused = false;
-                else
-                    is_paused = true;
+                if (gamestate == "paused")
+                    gamestate = "playing";
+                else if (gamestate == "playing")
+                    gamestate = "paused";
                 pressed_escape = true;
-            }             
-            if (Keyboard.GetState().IsKeyDown(Keys.M) & pressed_M == false)
-            {
-                if (is_in_menu == true)
-                    is_in_menu = false;
-                else
-                    is_in_menu = true;
-                pressed_M = true;
             }
             #region buttons
             bool pressed_resume = false;
             f_button(resume, ref pressed_resume);
             if (pressed_resume &
-                is_paused)
+                gamestate == "paused")
             {
-                is_paused = false;
+                gamestate = "playing";
             }
             bool pressed_menu = false;
             f_button(menu, ref pressed_menu);
             if (pressed_menu & 
-                is_paused)
+                gamestate == "paused")
             {
-                is_in_menu = true;
+                gamestate = "menu";
             }
             bool pressed_play = false;
             f_button(play, ref pressed_play);
             if (pressed_play &
-                is_in_menu)
+                gamestate == "menu")
             {
-                is_in_menu = false;
-                is_paused = false;
+                gamestate = "playing";
+                _player.X = int.Parse(File.ReadAllText("position_x.txt"));
+                _player.Y = int.Parse(File.ReadAllText("position_y.txt"));
+                x_velocityLeft = int.Parse(File.ReadAllText("notrightspeed.txt"));
+                y_velocityDown = int.Parse(File.ReadAllText("fallspeed.txt"));
+                camera_moveTo_x = 0;
+                camera_moveTo_y = 0;
+                zoom = 1;
             }
             bool pressed_exit = false;
             f_button(exit, ref pressed_exit);
             if (pressed_exit &
-                is_in_menu &
-                !is_editing)
+                gamestate == "menu")
             {
                 exiting = true;
             }
             bool pressed_editor = false;
             f_button(level_editer, ref pressed_editor);
             if (pressed_editor & 
-                is_in_menu)
+                gamestate == "menu")
             {
-                is_editing = true;
-                is_in_menu = false;
+                gamestate = "editing";
             }
             bool pressed_menu2 = false;
             f_button(edit_menu, ref pressed_menu2);
             if (pressed_menu2 & 
-                is_editing)
+                (gamestate == "editing" ||
+                gamestate == "testing"))
             {
-                is_editing = false;
-                is_in_menu = true;
+                gamestate = "menu";
             }
             bool pressed_test = false;
             f_button(test, ref pressed_test);
             if (pressed_test &
-                is_editing &
+                (gamestate == "editing" ||
+                gamestate == "testing") &
                 !pressed_testButton)
             {
                 test_tilemap = new int[edit_sizeY + 2, edit_sizeX + 2];
@@ -485,13 +526,13 @@ namespace basic_test
                     }
                 }
                 pressed_testButton = true;
-                if (!testing)
+                if (gamestate != "testing")
                 {
-                    testing = true;
+                    gamestate = "testing";
                 }
                 else
                 {
-                    testing = false;
+                    gamestate = "editing";
                 }
                 _player.X = 100;
                 _player.Y = 100;
@@ -502,7 +543,7 @@ namespace basic_test
             }
             #endregion
             #region LEVEL EDITOR
-            if (is_editing)
+            if (gamestate == "editing")
             {
                 if (Keyboard.GetState().IsKeyDown(Keys.X) &
                     pressed_x == false)
@@ -574,8 +615,7 @@ namespace basic_test
                     }
                     pressed_y = true;
                 }
-                if (is_editing &
-                    !testing)
+                if (gamestate == "editing")
                 {
                     if (Keyboard.GetState().IsKeyDown(Keys.S))
                     {
@@ -613,7 +653,7 @@ namespace basic_test
                 {
                     f = 2;
                 }
-                if (!testing)
+                if (gamestate == "editing")
                 {
                     int y = (int)(((mousepos_y - y_offset) - 192) / (96 * edit_zoom));
                     int x = (int)((mousepos_x - x_offset) / edit_zoom / 96);
@@ -655,7 +695,8 @@ namespace basic_test
                                         }
                                         pressed_leftMouseButton = true;
                                     }
-                                    if ((mouseState.LeftButton == ButtonState.Pressed) == false)
+                                    if ((mouseState.LeftButton == ButtonState.Pressed) == false & 
+                                        pressed_leftMouseButton)
                                     {
                                         int first_pointModifiedX = first_pointX * tilesize;
                                         int first_pointModifiedY = first_pointY * tilesize;
@@ -671,8 +712,7 @@ namespace basic_test
                                                 overlap = true;
                                             }
                                         }
-                                        if (pressed_leftMouseButton &
-                                            x * tilesize - first_pointModifiedX >= graphics.PreferredBackBufferWidth * zoom &
+                                        if (x * tilesize - first_pointModifiedX >= graphics.PreferredBackBufferWidth * zoom &
                                             y * tilesize - first_pointModifiedY >= graphics.PreferredBackBufferHeight * zoom &
                                             overlap == false)
                                         {
@@ -746,11 +786,12 @@ namespace basic_test
             //                                            //
             //--------------------------------------------//
             
-            if (is_in_menu == false & is_paused == false & (is_editing == false || testing))
+            if (gamestate == "playing" ||
+                gamestate == "testing")
             {
                 #region MOVEMENT update
                 int[,] usedTileMap = tileMap;
-                if (testing)
+                if (gamestate == "testing")
                 {
                     usedTileMap = test_tilemap;
                 }
@@ -813,7 +854,7 @@ namespace basic_test
                     0,
                     (int)((tileMap.GetLength(1) - 2) * tilesize * zoom),
                     (int)((tileMap.GetLength(0) - 5) * tilesize * zoom));
-                if (testing)
+                if (gamestate == "testing")
                 {
                     for (int r = 0; r < edit_rooms.Count; r++)
                     {
@@ -846,7 +887,7 @@ namespace basic_test
                         }
                     }
                 }
-                if (testing)
+                if (gamestate == "testing")
                 {
                     r_level = edit_rooms[test_currentRoom];
                 }
@@ -950,7 +991,8 @@ namespace basic_test
                 if (C_timeSinceLastAccelerationUpdate > t_accelerationDelay)
                 {
                     if (is_crouching == false
-                        & wall_climb == false)
+                        & (wall_climb == false ||
+                        iscoliding[3]))
                     {
                         if (Keyboard.GetState().IsKeyDown(Keys.D)
                             & !Keyboard.GetState().IsKeyDown(Keys.A)
@@ -996,9 +1038,12 @@ namespace basic_test
                     & Keyboard.GetState().IsKeyDown(Keys.Space)
                     & autojustpreventer == false)
                 {
+                    if (y_velocityDown < 0)
+                        y_velocityDown = 0;
                     y_velocityDown -= (int)(jumpspeed * 0.75);
                     _timetilljumpslowdown = 0;
                     wall_climb = false;
+                    #region left
                     if (iscoliding[0])
                     {
                         x_velocityLeft -= (int)(jumpspeed * 0.8);
@@ -1015,6 +1060,8 @@ namespace basic_test
                     {
                         x_velocityLeft -= (int)(jumpspeed * 0.4);
                     }
+                    #endregion
+                    #region right
                     if (iscoliding[1])
                     {
                         x_velocityLeft += (int)(jumpspeed * 0.8);
@@ -1032,6 +1079,7 @@ namespace basic_test
                     {
                         x_velocityLeft += (int)(jumpspeed * 0.4);
                     }
+                    #endregion
                     autojustpreventer = true;
                 }
                 if (!Keyboard.GetState().IsKeyDown(Keys.Space))
@@ -1049,21 +1097,6 @@ namespace basic_test
                 {
                     y_velocityDown += gravspeed;
                     _timesincelastfallacc = 0;
-                }
-                if (Keyboard.GetState().IsKeyDown(Keys.S)
-                    & y_velocityDown >= -4
-                    & y_velocityDown < fallcap2
-                    & _timesincelastfallacc >= falldelay
-                    & iscoliding[3] == false
-                    & wall_climb == false)
-                {
-                    y_velocityDown += gravspeed;
-                    _timesincelastfallacc = 0;
-                }
-                if (!Keyboard.GetState().IsKeyDown(Keys.S)
-                    & y_velocityDown > fallcap1)
-                {
-                    y_velocityDown -= gravspeed;
                 }
 
 
@@ -1227,31 +1260,34 @@ namespace basic_test
         protected override void Draw(GameTime gameTime)
         {
             double used_zoom;
-            if (testing)
+            if (gamestate == "testing" ||
+                gamestate == "playing")
                 used_zoom = zoom;
             else
                 used_zoom = edit_zoom;
-            int offsetY;
-            int offsetX;
-            if (testing || !is_editing)
+            int offsetY = 0;
+            int offsetX = 0;
+            if (gamestate == "playing" ||
+                gamestate == "testing")
             {
                 offsetX = camera_move_x;
                 offsetY = camera_move_y;
             }
-            else
+            else if (gamestate == "editing")
             {
                 offsetX = -x_offset;
                 offsetY = -y_offset;
             }
             GraphicsDevice.Clear(Color.Black);
             spriteBatch.Begin();
-            if (is_in_menu == false & 
-                (is_editing == false ||
-                testing))
+            if (gamestate == "playing" ||
+                gamestate == "testing" ||
+                gamestate == "paused")
             {
                 int x = (int)((_player.X - tilesize) / 12) * 12;
                 int y = (int)((_player.Y) / 12) * 12;
-                if (testing == false)
+                if (gamestate == "playing" ||
+                    gamestate == "paused")
                 {
                     spriteBatch.Draw(level, new Rectangle(
                         (int)((r_level.X * used_zoom) - offsetX),
@@ -1276,24 +1312,22 @@ namespace basic_test
                         Color.White);
                 }   
             }
-            if (is_paused & 
-                is_in_menu == false &
-                is_editing == false)
+            if (gamestate == "paused")
             {
                 spriteBatch.Draw(pausescreen, new Rectangle(0, 0, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight), Color.White);
                 spriteBatch.Draw(b_pause, paused, Color.White);
                 spriteBatch.Draw(b_menu, menu, Color.White);
                 spriteBatch.Draw(b_resume, resume, Color.White);
             }
-            if (is_in_menu &
-                is_editing == false)
+            if (gamestate == "menu")
             {
                 spriteBatch.Draw(standurdised_box, new Rectangle(0, 0, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight), Color.Black);
                 spriteBatch.Draw(b_play, play, Color.White);
                 spriteBatch.Draw(b_exit, exit, Color.White);
                 spriteBatch.Draw(b_level, level_editer, Color.White);
             }
-            if (is_editing)
+            if (gamestate == "editing" ||
+                gamestate == "testing")
             {
                 f_fill(ref edit_tilemap, edit_sizeX, edit_sizeY);
                 for (int y = 0; y < edit_sizeY; y ++)
@@ -1421,7 +1455,7 @@ namespace basic_test
                 spriteBatch.DrawString(font, "x-speed :" + x_velocityLeft + "  Y-speed :" + y_velocityDown, new Vector2(50, 110 + variation), Color.White);
                 spriteBatch.DrawString(font, "camra_move_x :" + camera_move_x + "  camera_move_y :" + camera_move_y, new Vector2(50, 130 + variation), Color.White);
                 spriteBatch.DrawString(font, "temp 1 :" + camera_moveTo_x + "  temp 2 :" + level.Width, new Vector2(50, 150 + variation), Color.White);
-                spriteBatch.DrawString(font, "temp 3 :" + camera_move_x + "  temp 4 :" + r_level.X, new Vector2(50, 170 + variation), Color.White);
+                spriteBatch.DrawString(font, "temp 3 :" + gamestate + "  temp 4 :" + r_level.X, new Vector2(50, 170 + variation), Color.White);
             }
             //spriteBatch.Draw(Player, level_rec, Color.Black);
             spriteBatch.Draw(pointer, new Rectangle(mousepos_x, mousepos_y, 35, 45), Color.White); 
