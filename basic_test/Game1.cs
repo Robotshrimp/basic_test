@@ -198,16 +198,19 @@ namespace basic_test
                 File.WriteAllText("notrightspeed.txt", x_velocityLeft.ToString());
             if (!File.Exists("fallspeed.txt"))
                 File.WriteAllText("fallspeed.txt", y_velocityDown.ToString());
-            //listget("rooms.txt", ref edit_roomTilemap);
-            listget("list.txt", ref edit_tilemap, ref edit_sizeX, ref edit_sizeY);
-            listget("rooms.txt", ref edit_roomTilemap, ref edit_sizeX, ref edit_sizeY);
-            if (true)
-            {
-                _player.X = int.Parse(File.ReadAllText("position_x.txt"));
-                _player.Y = int.Parse(File.ReadAllText("position_y.txt"));
-                x_velocityLeft = int.Parse(File.ReadAllText("notrightspeed.txt"));
-                y_velocityDown = int.Parse(File.ReadAllText("fallspeed.txt"));
-            }
+            if (!File.Exists("list.txt"))
+                f_listsave(edit_tilemap, "list.txt");
+            if (!File.Exists("rooms.txt"))
+                f_listsave(edit_roomTilemap, "rooms_map.txt");
+
+
+            f_listget("list.txt", ref edit_tilemap, ref edit_sizeX, ref edit_sizeY);
+            f_listget("rooms_map.txt", ref edit_roomTilemap, ref edit_sizeX, ref edit_sizeY);
+            f_recget("rooms.txt", ref edit_rooms);
+            _player.X = int.Parse(File.ReadAllText("position_x.txt"));
+            _player.Y = int.Parse(File.ReadAllText("position_y.txt"));
+            x_velocityLeft = int.Parse(File.ReadAllText("notrightspeed.txt"));
+            y_velocityDown = int.Parse(File.ReadAllText("fallspeed.txt"));
             tileMap = new int[,]
             {
                 {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -264,7 +267,8 @@ namespace basic_test
                 mouseState.X < dimentions.X + dimentions.Width &
                 mouseState.Y > dimentions.Y &
                 mouseState.Y < dimentions.Y + dimentions.Height &
-                mouseState.LeftButton == ButtonState.Pressed)
+                (mouseState.LeftButton == ButtonState.Pressed ||
+                mouseState.RightButton == ButtonState.Pressed))
             {
                 ispressed = true;
             }
@@ -288,7 +292,7 @@ namespace basic_test
             side_touching_wall);
         }
         #region int array
-        static public void mapsave(
+        static public void f_mapsave(
             int[,] map,
             string file)
         {
@@ -307,7 +311,7 @@ namespace basic_test
             }
             File.WriteAllText(file, filecontent);
         }
-        static public void mapget(
+        static public void f_mapget(
             string file,
             ref int[,] map)
         {
@@ -326,7 +330,7 @@ namespace basic_test
         }
         #endregion
         #region list array
-        static public void listsave(
+        static public void f_listsave(
             List<List<int>> map,
             string file)
         {
@@ -345,7 +349,7 @@ namespace basic_test
             }
             File.WriteAllText(file, filecontent);
         }
-        static public void listget(
+        static public void f_listget(
             string file,
             ref List<List<int>> map,
             ref int sizeX,
@@ -364,6 +368,34 @@ namespace basic_test
                 {
                     map[y][x] = int.Parse(yAxisValue[x]);
                 }
+            }
+        }
+        #endregion
+        #region rectangle
+        static public void f_recsave(
+            List<Rectangle> recs,
+            string file)
+        {
+
+            string filecontent = "";
+            for (int t = 0; t < recs.Count; t++)
+            {
+                filecontent = filecontent + recs[t].X + " " + recs[t].Y + " " + recs[t].Width + " " + recs[t].Height;
+                if (t != recs.Count - 1)
+                    filecontent = filecontent + ",\n";
+            }
+            File.WriteAllText(file, filecontent);
+        }
+        static public void f_recget(
+            string file,
+            ref List<Rectangle> recs)
+        {
+            string filecontent = File.ReadAllText(file);
+            string[] split = filecontent.Split(',');
+            for (int t = 0; t < split.GetLength(0); t++)
+            {
+                string[] temp = split[t].Split(' ');
+                recs.Add(new Rectangle(int.Parse(temp[0]), int.Parse(temp[1]), int.Parse(temp[2]), int.Parse(temp[3])));
             }
         }
         #endregion
@@ -424,8 +456,9 @@ namespace basic_test
                 File.WriteAllText("position_y.txt", _player.Y.ToString());
                 File.WriteAllText("notrightspeed.txt", x_velocityLeft.ToString());
                 File.WriteAllText("fallspeed.txt", y_velocityDown.ToString());
-                listsave(edit_roomTilemap, "rooms.txt");
-                listsave(edit_tilemap, "list.txt");
+                f_listsave(edit_roomTilemap, "rooms_map.txt");
+                f_listsave(edit_tilemap, "list.txt");
+                f_recsave(edit_rooms, "rooms.txt");
                 Exit();
             }
             if (!Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -543,6 +576,14 @@ namespace basic_test
             }
             #endregion
             #region LEVEL EDITOR
+            if (Keyboard.GetState().IsKeyDown(Keys.F1))
+            {
+                f = 1;
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.F2))
+            {
+                f = 2;
+            }
             if (gamestate == "editing")
             {
                 if (Keyboard.GetState().IsKeyDown(Keys.X) &
@@ -615,26 +656,23 @@ namespace basic_test
                     }
                     pressed_y = true;
                 }
-                if (gamestate == "editing")
+                if (Keyboard.GetState().IsKeyDown(Keys.S))
                 {
-                    if (Keyboard.GetState().IsKeyDown(Keys.S))
-                    {
-                        y_offset -= 10;
-                    }
-                    if (Keyboard.GetState().IsKeyDown(Keys.D))
-                    {
-                        x_offset -= 10;
-                    }
-                    if (Keyboard.GetState().IsKeyDown(Keys.W) &
-                        y_offset <= -10)
-                    {
-                        y_offset += 10;
-                    }
-                    if (Keyboard.GetState().IsKeyDown(Keys.A) &
-                        x_offset <= -10)
-                    {
-                        x_offset += 10;
-                    }
+                    y_offset -= 10;
+                }
+                if (Keyboard.GetState().IsKeyDown(Keys.D))
+                {
+                    x_offset -= 10;
+                }
+                if (Keyboard.GetState().IsKeyDown(Keys.W) &
+                    y_offset <= -10)
+                {
+                    y_offset += 10;
+                }
+                if (Keyboard.GetState().IsKeyDown(Keys.A) &
+                    x_offset <= -10)
+                {
+                    x_offset += 10;
                 }
                 if (Keyboard.GetState().IsKeyDown(Keys.OemMinus) &
                     edit_zoom >= 20 / 96)
@@ -645,135 +683,152 @@ namespace basic_test
                 {
                     edit_zoom += 0.01;
                 }
-                if (Keyboard.GetState().IsKeyDown(Keys.F1))
+                int y = (int)(((mousepos_y - y_offset) - 192) / (96 * edit_zoom));
+                int x = (int)((mousepos_x - x_offset) / edit_zoom / 96);
+                if (f == 1)
                 {
-                    f = 1;
-                }
-                if (Keyboard.GetState().IsKeyDown(Keys.F2))
-                {
-                    f = 2;
-                }
-                if (gamestate == "editing")
-                {
-                    int y = (int)(((mousepos_y - y_offset) - 192) / (96 * edit_zoom));
-                    int x = (int)((mousepos_x - x_offset) / edit_zoom / 96);
-                    if (f == 1)
+                    if (edit_tilemap.Count == edit_sizeY &
+                        edit_tilemap[edit_tilemap.Count - 1].Count == edit_sizeX)
                     {
-                        if (edit_tilemap.Count == edit_sizeY &
-                            edit_tilemap[edit_tilemap.Count - 1].Count == edit_sizeX)
+                        if (mouseState.LeftButton == ButtonState.Pressed &
+                            y < edit_sizeY & y >= 0 &
+                            x < edit_sizeX)
                         {
-                            if (mouseState.LeftButton == ButtonState.Pressed &
-                                y < edit_sizeY & y >= 0 &
-                                x < edit_sizeX)
-                            {
-                                edit_tilemap[y][x] = 1;
-                            }
-                            if (mouseState.RightButton == ButtonState.Pressed &
-                                y < edit_sizeY & y >= 0 &
-                                x < edit_sizeX)
-                            {
-                                edit_tilemap[y][x] = 0;
-                            }
+                            edit_tilemap[y][x] = 1;
+                        }
+                        if (mouseState.RightButton == ButtonState.Pressed &
+                            y < edit_sizeY & y >= 0 &
+                            x < edit_sizeX)
+                        {
+                            edit_tilemap[y][x] = 0;
                         }
                     }
-                    if (f == 2)
+                }
+                if (f == 2)
+                {
+                    if ((mouseState.RightButton == ButtonState.Pressed) == false)
                     {
-                        if ((mouseState.RightButton == ButtonState.Pressed) == false)
+                        if (edit_tilemap.Count == edit_sizeY)
                         {
-                            if (edit_tilemap.Count == edit_sizeY)
+                            if (edit_tilemap[edit_tilemap.Count - 1].Count == edit_sizeX)
                             {
-                                if (edit_tilemap[edit_tilemap.Count - 1].Count == edit_sizeX)
+                                if (mouseState.LeftButton == ButtonState.Pressed &
+                                    !pressed_leftMouseButton)
                                 {
-                                    if (mouseState.LeftButton == ButtonState.Pressed &
-                                        !pressed_leftMouseButton)
+                                    if (y < edit_sizeY & y >= 0 &
+                                        x < edit_sizeX)
                                     {
-                                        if (y < edit_sizeY & y >= 0 &
-                                            x < edit_sizeX)
-                                        {
-                                            first_pointX = x;
-                                            first_pointY = y;
-                                        }
-                                        pressed_leftMouseButton = true;
+                                        first_pointX = x;
+                                        first_pointY = y;
                                     }
-                                    if ((mouseState.LeftButton == ButtonState.Pressed) == false & 
-                                        pressed_leftMouseButton)
+                                    pressed_leftMouseButton = true;
+                                }
+                                if ((mouseState.LeftButton == ButtonState.Pressed) == false & 
+                                    pressed_leftMouseButton)
+                                {
+                                    int first_pointModifiedX = first_pointX * tilesize;
+                                    int first_pointModifiedY = first_pointY * tilesize;
+                                    Rectangle addedRectangle = new Rectangle(first_pointModifiedX, first_pointModifiedY, x * tilesize - first_pointModifiedX + tilesize, y * tilesize - first_pointModifiedY + tilesize + 192);
+                                    bool overlap = false;
+                                    for (int r = edit_currentRoom; r > 0; r--)
                                     {
-                                        int first_pointModifiedX = first_pointX * tilesize;
-                                        int first_pointModifiedY = first_pointY * tilesize;
-                                        Rectangle addedRectangle = new Rectangle(first_pointModifiedX, first_pointModifiedY, x * tilesize - first_pointModifiedX + tilesize, y * tilesize - first_pointModifiedY + tilesize + 192);
-                                        bool overlap = false;
-                                        for (int r = edit_currentRoom; r > 0; r--)
+                                        if (!(addedRectangle.X + addedRectangle.Width < edit_rooms[r].X ||
+                                            addedRectangle.X > edit_rooms[r].X + edit_rooms[r].Width &&
+                                            addedRectangle.Y + addedRectangle.Height < edit_rooms[r].Y ||
+                                            addedRectangle.Y > edit_rooms[r].Y + edit_rooms[r].Height))
                                         {
-                                            if (!(addedRectangle.X + addedRectangle.Width < edit_rooms[r].X ||
-                                                addedRectangle.X > edit_rooms[r].X + edit_rooms[r].Width &&
-                                                addedRectangle.Y + addedRectangle.Height < edit_rooms[r].Y ||
-                                                addedRectangle.Y > edit_rooms[r].Y + edit_rooms[r].Height))
-                                            {
-                                                overlap = true;
-                                            }
+                                            overlap = true;
                                         }
-                                        if (x * tilesize - first_pointModifiedX >= graphics.PreferredBackBufferWidth * zoom &
-                                            y * tilesize - first_pointModifiedY >= graphics.PreferredBackBufferHeight * zoom &
-                                            overlap == false)
+                                    }
+                                    if (x * tilesize - first_pointModifiedX >= graphics.PreferredBackBufferWidth * zoom &
+                                        y * tilesize - first_pointModifiedY >= graphics.PreferredBackBufferHeight * zoom &
+                                        overlap == false)
+                                    {
+                                        edit_rooms.Add(addedRectangle);
+                                        for(int t_y = first_pointY; t_y <= y; t_y++)
                                         {
-                                            edit_rooms.Add(addedRectangle);
-                                            for(int t_y = first_pointY; t_y <= y; t_y++)
+                                            for (int t_x = first_pointX; t_x <= x; t_x++)
                                             {
-                                                for (int t_x = first_pointX; t_x <= x; t_x++)
+                                                if (t_y == first_pointY &
+                                                    t_x == first_pointX)
                                                 {
-                                                    if (t_y == first_pointY &
-                                                        t_x == first_pointX)
-                                                    {
-                                                        edit_roomTilemap[t_y][t_x] = 2;
-                                                    }
-                                                    else 
-                                                    if (t_y == first_pointY &
-                                                        t_x == x)
-                                                    {
-                                                        edit_roomTilemap[t_y][t_x] = 4;
-                                                    }
-                                                    else
-                                                    if (t_y == y &
-                                                        t_x == x)
-                                                    {
-                                                        edit_roomTilemap[t_y][t_x] = 6;
-                                                    }
-                                                    else
-                                                    if (t_y == y &
-                                                        t_x == first_pointX)
-                                                    {
-                                                        edit_roomTilemap[t_y][t_x] = 8;
-                                                    }
-                                                    else
-                                                    if (t_y == first_pointY)
-                                                    {
-                                                        edit_roomTilemap[t_y][t_x] = 3;
-                                                    }
-                                                    else
-                                                    if (t_x == x)
-                                                    {
-                                                        edit_roomTilemap[t_y][t_x] = 5;
-                                                    }
-                                                    else
-                                                    if (t_y == y)
-                                                    {
-                                                        edit_roomTilemap[t_y][t_x] = 7;
-                                                    }
-                                                    else
-                                                    if (t_x == first_pointX)
-                                                    {
-                                                        edit_roomTilemap[t_y][t_x] = 9;
-                                                    }
-                                                    else
-                                                    {
-                                                        edit_roomTilemap[t_y][t_x] = 1;
-                                                    }
+                                                    edit_roomTilemap[t_y][t_x] = 2;
+                                                }
+                                                else 
+                                                if (t_y == first_pointY &
+                                                    t_x == x)
+                                                {
+                                                    edit_roomTilemap[t_y][t_x] = 4;
+                                                }
+                                                else
+                                                if (t_y == y &
+                                                    t_x == x)
+                                                {
+                                                    edit_roomTilemap[t_y][t_x] = 6;
+                                                }
+                                                else
+                                                if (t_y == y &
+                                                    t_x == first_pointX)
+                                                {
+                                                    edit_roomTilemap[t_y][t_x] = 8;
+                                                }
+                                                else
+                                                if (t_y == first_pointY)
+                                                {
+                                                    edit_roomTilemap[t_y][t_x] = 3;
+                                                }
+                                                else
+                                                if (t_x == x)
+                                                {
+                                                    edit_roomTilemap[t_y][t_x] = 5;
+                                                }
+                                                else
+                                                if (t_y == y)
+                                                {
+                                                    edit_roomTilemap[t_y][t_x] = 7;
+                                                }
+                                                else
+                                                if (t_x == first_pointX)
+                                                {
+                                                    edit_roomTilemap[t_y][t_x] = 9;
+                                                }
+                                                else
+                                                {
+                                                    edit_roomTilemap[t_y][t_x] = 1;
                                                 }
                                             }
                                         }
-                                        pressed_leftMouseButton = false;
+                                    }
+                                    pressed_leftMouseButton = false;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        bool pressed = false;
+                        for (int t = 0; t < edit_rooms.Count; t++)
+                        {
+                            f_button(new Rectangle(
+                                (int)(edit_rooms[t].X * edit_zoom + x_offset), 
+                                (int)(edit_rooms[t].Y * edit_zoom + y_offset), 
+                                (int)(edit_rooms[t].Width * edit_zoom), 
+                                (int)(edit_rooms[t].Height * edit_zoom)), ref pressed);
+                            if (pressed)
+                            {
+                                int firstPointX = edit_rooms[t].X / 96;
+                                int firstPointY = edit_rooms[t].Y / 96;
+                                int lastPointX = (edit_rooms[t].X + edit_rooms[t].Width) / 96;
+                                int lastPointY = (edit_rooms[t].Y + edit_rooms[t].Height) / 96;
+                                for(int Yvalue = firstPointY; Yvalue < lastPointY; Yvalue++)
+                                {
+                                    for (int Xvalue = firstPointX; Xvalue < lastPointX;  Xvalue++)
+                                    {
+                                        edit_roomTilemap[Yvalue][Xvalue] = 0;
                                     }
                                 }
+                                edit_rooms.Remove(edit_rooms[t]);
+                                break;
                             }
                         }
                     }
@@ -864,25 +919,6 @@ namespace basic_test
                             _player.Y < edit_rooms[r].Y + edit_rooms[r].Height &
                             r != test_currentRoom)
                         {
-                            if (false)
-                            {
-                                if (_player.X + _player.Width > edit_rooms[r].X)
-                                {
-                                    _player.X += (edit_rooms[r].X - _player.X) + tilesize;
-                                }
-                                if (_player.X < edit_rooms[r].X + edit_rooms[r].Width)
-                                {
-                                    _player.X -= (edit_rooms[r].X - (_player.X + _player.Width)) + tilesize;
-                                }
-                                if (_player.Y + _player.Height > edit_rooms[r].Y)
-                                {
-                                    _player.Y += (edit_rooms[r].Y - _player.Y) + tilesize;
-                                }
-                                if (_player.Y < edit_rooms[r].Y + edit_rooms[r].Height)
-                                {
-                                    _player.Y -= (edit_rooms[r].Y - (_player.Y + _player.Height)) + tilesize;
-                                }
-                            }
                             test_currentRoom = r;
                         }
                     }
@@ -1248,9 +1284,8 @@ namespace basic_test
                 {
                     _timetilljumpslowdown += gameTime.ElapsedGameTime.TotalSeconds;
                 }
-               
-            }
-            #endregion
+                #endregion
+            } 
         }
 
         /// <summary>
