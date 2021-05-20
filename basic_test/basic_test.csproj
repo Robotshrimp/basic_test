@@ -56,7 +56,8 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
+    <Compile Include="fill.cs" />
+    <Compile Include="save.cs" />
     <Compile Include="collision.cs" />
     <Compile Include="Game1.cs" />
     <Compile Include="Program.cs" />

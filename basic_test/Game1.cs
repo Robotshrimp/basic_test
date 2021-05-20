@@ -12,7 +12,13 @@ namespace basic_test
     /// </summary>       1172
     public class Game1 : Game
     {
-        
+        #region classes
+
+        colision f_collision = new colision();
+        fill f_fill = new fill();
+        save f_save = new save();
+
+        #endregion
         #region variables
         int[,] tileMap;
         double zoom = 1;
@@ -60,6 +66,10 @@ namespace basic_test
         List<List<int>> edit_tilemap = new List<List<int>>();
         List<List<int>> edit_roomTilemap = new List<List<int>>();
         List<Rectangle> edit_rooms = new List<Rectangle>();
+        List<List<int>> edit_spikesUp = new List<List<int>>();
+        List<List<int>> edit_spikesRight = new List<List<int>>();
+        List<List<int>> edit_spikesDown = new List<List<int>>();
+        List<List<int>> edit_spikesLeft = new List<List<int>>();
         int edit_currentRoom = 0;
         int test_currentRoom = 0;
         int first_pointX;
@@ -70,6 +80,13 @@ namespace basic_test
         int f = 1;
         int x_offset;
         int y_offset;
+        int spikeSide = 0;
+        enum spikeside
+        {
+            up = 0,
+            right = 1,
+            down = 2
+        }
         //key press
 
         List<bool> pressed = new List<bool>();
@@ -80,6 +97,7 @@ namespace basic_test
         bool pressed_leftMouseButton;
 
         //movement variables
+        
 
         //horozontal
 
@@ -199,14 +217,14 @@ namespace basic_test
             if (!File.Exists("fallspeed.txt"))
                 File.WriteAllText("fallspeed.txt", y_velocityDown.ToString());
             if (!File.Exists("list.txt"))
-                f_listsave(edit_tilemap, "list.txt");
+                f_save.f_listsave(edit_tilemap, "list.txt");
             if (!File.Exists("rooms.txt"))
-                f_listsave(edit_roomTilemap, "rooms_map.txt");
+                f_save.f_listsave(edit_roomTilemap, "rooms_map.txt");
 
 
-            f_listget("list.txt", ref edit_tilemap, ref edit_sizeX, ref edit_sizeY);
-            f_listget("rooms_map.txt", ref edit_roomTilemap, ref edit_sizeX, ref edit_sizeY);
-            f_recget("rooms.txt", ref edit_rooms);
+            f_save.f_listget("list.txt", ref edit_tilemap, ref edit_sizeX, ref edit_sizeY);
+            f_save.f_listget("rooms_map.txt", ref edit_roomTilemap, ref edit_sizeX, ref edit_sizeY);
+            f_save.f_recget("rooms.txt", ref edit_rooms);
             _player.X = int.Parse(File.ReadAllText("position_x.txt"));
             _player.Y = int.Parse(File.ReadAllText("position_y.txt"));
             x_velocityLeft = int.Parse(File.ReadAllText("notrightspeed.txt"));
@@ -237,26 +255,6 @@ namespace basic_test
             };
         }
         #region functions
-        #region tile filler
-        static public void f_fill(ref List<List<int>> list, int size_x, int size_y)
-        {            
-            if (list.Capacity < size_y)
-                list.Capacity = size_y;
-            for (int i = list.Count; i < list.Capacity; i++)
-            {
-                list.Add(new List<int>());
-            }
-            for (int y = 0; y < size_y; y++)
-            {
-                if (list[y].Capacity < size_x)
-                    list[y].Capacity = size_x;
-                for (int i = list[y].Count; i < list[y].Capacity; i++)
-                {
-                    list[y].Add(0);
-                }
-            }
-        }
-        #endregion
         #region button function
         static public void f_button(
             Rectangle dimentions,
@@ -274,133 +272,8 @@ namespace basic_test
             }
         }
         #endregion
-        static public void f_collision(
-        ref Rectangle player,
-        int tile_size,
-        int[,] mapOfTiles,
-        ref int affected_varx,
-        ref int affected_vary,
-        bool[] side_touching_wall)
-        {
-            colision f_collision = new colision();
-            f_collision._collide(
-            ref player,
-            tile_size,
-            mapOfTiles,
-            ref affected_varx,
-            ref affected_vary,
-            side_touching_wall);
-        }
-        #region int array
-        static public void f_mapsave(
-            int[,] map,
-            string file)
-        {
-
-            string filecontent = "";
-            for (int y = 0; y < map.GetLength(0); y++)
-            {
-                for (int x = 0; x < map.GetLength(1); x++)
-                {
-                    filecontent = filecontent + map[y, x];
-                    if (x != map.GetLength(1) - 1)
-                        filecontent = filecontent + " ";
-                }
-                if (y != map.GetLength(0) - 1)
-                    filecontent = filecontent + ",\n";
-            }
-            File.WriteAllText(file, filecontent);
-        }
-        static public void f_mapget(
-            string file,
-            ref int[,] map)
-        {
-            string filecontent = File.ReadAllText(file);
-            string[] split = filecontent.Split(',');
-            string[] yAxisValue = split[0].Split(' ');
-            map = new int[split.GetLength(0), yAxisValue.GetLength(0)];
-            for (int y = 0; y < split.GetLength(0); y++)
-            {
-                yAxisValue = split[y].Split(' ');
-                for (int x = 0; x < yAxisValue.GetLength(0); x++)
-                {
-                    map[y, x] = int.Parse(yAxisValue[x]);
-                }
-            }
-        }
         #endregion
-        #region list array
-        static public void f_listsave(
-            List<List<int>> map,
-            string file)
-        {
-
-            string filecontent = "";
-            for (int y = 0; y < map.Capacity; y++)
-            {
-                for (int x = 0; x < map[0].Capacity; x++)
-                {
-                    filecontent = filecontent + map[y][x];
-                    if (x != map[0].Capacity - 1)
-                        filecontent = filecontent + " ";
-                }
-                if (y != map.Capacity - 1)
-                    filecontent = filecontent + ",\n";
-            }
-            File.WriteAllText(file, filecontent);
-        }
-        static public void f_listget(
-            string file,
-            ref List<List<int>> map,
-            ref int sizeX,
-            ref int sizeY)
-        {
-            string filecontent = File.ReadAllText(file);
-            string[] split = filecontent.Split(',');
-            string[] yAxisValue = split[0].Split(' ');
-            sizeX = yAxisValue.GetLength(0);
-            sizeY = split.GetLength(0);
-            f_fill(ref map, sizeX, sizeY);
-            for (int y = 0; y < split.GetLength(0); y++)
-            {
-                yAxisValue = split[y].Split(' ');
-                for (int x = 0; x < yAxisValue.GetLength(0); x++)
-                {
-                    map[y][x] = int.Parse(yAxisValue[x]);
-                }
-            }
-        }
-        #endregion
-        #region rectangle
-        static public void f_recsave(
-            List<Rectangle> recs,
-            string file)
-        {
-
-            string filecontent = "";
-            for (int t = 0; t < recs.Count; t++)
-            {
-                filecontent = filecontent + recs[t].X + " " + recs[t].Y + " " + recs[t].Width + " " + recs[t].Height;
-                if (t != recs.Count - 1)
-                    filecontent = filecontent + ",\n";
-            }
-            File.WriteAllText(file, filecontent);
-        }
-        static public void f_recget(
-            string file,
-            ref List<Rectangle> recs)
-        {
-            string filecontent = File.ReadAllText(file);
-            string[] split = filecontent.Split(',');
-            for (int t = 0; t < split.GetLength(0); t++)
-            {
-                string[] temp = split[t].Split(' ');
-                recs.Add(new Rectangle(int.Parse(temp[0]), int.Parse(temp[1]), int.Parse(temp[2]), int.Parse(temp[3])));
-            }
-        }
-        #endregion
-        #endregion
-
+        
 
         /// <summary>
         /// LoadContent will be called once per game and is the place to load
@@ -456,9 +329,9 @@ namespace basic_test
                 File.WriteAllText("position_y.txt", _player.Y.ToString());
                 File.WriteAllText("notrightspeed.txt", x_velocityLeft.ToString());
                 File.WriteAllText("fallspeed.txt", y_velocityDown.ToString());
-                f_listsave(edit_roomTilemap, "rooms_map.txt");
-                f_listsave(edit_tilemap, "list.txt");
-                f_recsave(edit_rooms, "rooms.txt");
+                f_save.f_listsave(edit_roomTilemap, "rooms_map.txt");
+                f_save.f_listsave(edit_tilemap, "list.txt");
+                f_save.f_recsave(edit_rooms, "rooms.txt");
                 Exit();
             }
             if (!Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -583,6 +456,10 @@ namespace basic_test
             if (Keyboard.GetState().IsKeyDown(Keys.F2))
             {
                 f = 2;
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.F3))
+            {
+                f = 3;
             }
             if (gamestate == "editing")
             {
@@ -833,6 +710,81 @@ namespace basic_test
                         }
                     }
                 }
+                if (f == 3)
+                {
+                    if (Keyboard.GetState().IsKeyDown(Keys.Left))
+                    {
+                        spikeSide = 0;
+                    }
+                    if (Keyboard.GetState().IsKeyDown(Keys.Up))
+                    {
+                        spikeSide = 1;
+                    }
+                    if (Keyboard.GetState().IsKeyDown(Keys.Right))
+                    {
+                        spikeSide = 2;
+                    }
+                    if (Keyboard.GetState().IsKeyDown(Keys.Down))
+                    {
+                        spikeSide = 3;
+                    }
+                    if (mouseState.LeftButton == ButtonState.Pressed &
+                        y < edit_sizeY & y >= 0 &
+                        x < edit_sizeX)
+                    {
+                        switch (spikeSide)
+                        {
+                            case 0:
+
+                                break;
+                            case 1:
+
+                                break;
+                            case 2:
+
+                                break;
+                            case 3:
+
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    if (mouseState.RightButton == ButtonState.Pressed &
+                        y < edit_sizeY & y >= 0 &
+                        x < edit_sizeX)
+                    {
+                        if (spikeSide == 0)
+                        {
+
+                        }
+                        if (spikeSide == 1)
+                        {
+
+                        }
+                        if (spikeSide == 2)
+                        {
+
+                        }
+                        if (spikeSide == 3)
+                        {
+
+                        }
+                    }
+                }
+            }
+            #endregion
+            #region debug
+            if (Keyboard.GetState().IsKeyDown(Keys.Tab))
+            {
+                if (debug == true)
+                {
+                    debug = false;
+                }
+                if (debug == false)
+                {
+                    debug = true;
+                }
             }
             #endregion
             //--------------------------------------------//
@@ -840,7 +792,7 @@ namespace basic_test
             //                  MOVEMENT                  //
             //                                            //
             //--------------------------------------------//
-            
+
             if (gamestate == "playing" ||
                 gamestate == "testing")
             {
@@ -856,7 +808,14 @@ namespace basic_test
                 }
                 if (_timesincelastmove >= movedelay)
                 {
-                    f_collision(ref _player, tilesize, usedTileMap, ref x_velocityLeft, ref y_velocityDown, iscoliding);
+                    f_collision._collide(
+                    ref _player,
+                    tilesize,
+                    usedTileMap,
+                    ref x_velocityLeft,
+                    ref y_velocityDown,
+                    iscoliding,
+                    1);
                     _player.X -= x_velocityLeft;
                     _player.Y += y_velocityDown;
                     _timesincelastmove = 0;
@@ -886,16 +845,16 @@ namespace basic_test
                         aircheck[3] = false;
                         int X = 1;
                         int Y = -1;
-                        f_collision(ref _player, tilesize, usedTileMap, ref X, ref Y, aircheck);
+                        f_collision._collide(ref _player, tilesize, usedTileMap, ref X, ref Y, aircheck, 1);
                         X = 1;
                         Y = 1;
-                        f_collision(ref _player, tilesize, usedTileMap, ref X, ref Y, aircheck);
+                        f_collision._collide(ref _player, tilesize, usedTileMap, ref X, ref Y, aircheck, 1);
                         X = -1;
                         Y = -1;
-                        f_collision(ref _player, tilesize, usedTileMap, ref X, ref Y, aircheck);
+                        f_collision._collide(ref _player, tilesize, usedTileMap, ref X, ref Y, aircheck, 1);
                         X = -1;
                         Y = 1;
-                        f_collision(ref _player, tilesize, usedTileMap, ref X, ref Y, aircheck);
+                        f_collision._collide(ref _player, tilesize, usedTileMap, ref X, ref Y, aircheck, 1);
                         iscoliding[0] = aircheck[0];
                         iscoliding[1] = aircheck[1];
                         iscoliding[2] = aircheck[2];
@@ -972,25 +931,6 @@ namespace basic_test
                     }
                 }
                 // TODO: 
-                if (false)
-                {
-                    if (((_player.X - tilesize) * zoom - camera_move_x) - (_player.Width * zoom / 2) < graphics.PreferredBackBufferWidth / 7 * 2)
-                    {
-                        camera_move_x += (int)((camera_moveTo_x - camera_move_x) / 8);
-                    }
-                    if (((_player.X - tilesize) * zoom - camera_move_x) - (_player.Width * zoom / 2) > graphics.PreferredBackBufferWidth / 7 * 4)
-                    {
-                        camera_move_x += (int)((camera_moveTo_x - camera_move_x) / 8);
-                    }
-                    if (((_player.Y) * zoom - camera_move_y) - (_player.Height * zoom) / 2 < graphics.PreferredBackBufferHeight / 7 * 2)
-                    {
-                        camera_move_y += (int)((camera_moveTo_y - camera_move_y) / 8);
-                    }
-                    if (((_player.Y) * zoom - camera_move_y) - (_player.Height * zoom) / 2 > graphics.PreferredBackBufferHeight / 7 * 4)
-                    {
-                        camera_move_y += (int)((camera_moveTo_y - camera_move_y) / 8);
-                    }
-                }
                 camera_move_y += (int)((camera_moveTo_y - camera_move_y) / 16);
                 camera_move_x += (int)((camera_moveTo_x - camera_move_x) / 16);
                 if ((int)((camera_moveTo_y - camera_move_y) / 16) > -1 ||
@@ -1259,19 +1199,6 @@ namespace basic_test
                 }
                 #endregion
                 #endregion
-                #region debug
-                if (Keyboard.GetState().IsKeyDown(Keys.Tab))
-                {
-                    if (debug == true)
-                    {
-                        debug = false;
-                    }
-                    if (debug == false)
-                    {
-                        debug = true;
-                    }
-                }
-                #endregion
                 base.Update(gameTime);
                 #region timers
                 C_timeSinceLastAccelerationUpdate += gameTime.ElapsedGameTime.TotalSeconds;
@@ -1364,7 +1291,7 @@ namespace basic_test
             if (gamestate == "editing" ||
                 gamestate == "testing")
             {
-                f_fill(ref edit_tilemap, edit_sizeX, edit_sizeY);
+                f_fill.f_fill(ref edit_tilemap, edit_sizeX, edit_sizeY);
                 for (int y = 0; y < edit_sizeY; y ++)
                 {
                     for (int x = 0; x < edit_sizeX; x++)
@@ -1388,9 +1315,14 @@ namespace basic_test
                         }
                     }
                 }
+                f_fill.f_fill(ref edit_spikesUp, edit_sizeX, edit_sizeY);
+                f_fill.f_fill(ref edit_spikesRight, edit_sizeX, edit_sizeY);
+                f_fill.f_fill(ref edit_spikesDown, edit_sizeX, edit_sizeY);
+                f_fill.f_fill(ref edit_spikesLeft, edit_sizeX, edit_sizeY);
+
                 if (f == 2)
                 {
-                    f_fill(ref edit_roomTilemap, edit_sizeX, edit_sizeY);
+                    f_fill.f_fill(ref edit_roomTilemap, edit_sizeX, edit_sizeY);
                     for (int y = 0; y < edit_sizeY; y++)
                     {
                         for (int x = 0; x < edit_sizeX; x++)

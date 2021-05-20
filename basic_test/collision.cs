@@ -6,6 +6,7 @@ using System.IO;
 
 class colision
 {
+    
     static public void f_slope_check(
         int till_rec_dif,
         int tilesize,
@@ -34,7 +35,7 @@ class colision
     static public void f_slope_checkII(
         bool side_one,
         bool side_two,
-        int tilemap,
+        bool tilemapCheck,
         ref int resistance,
         ref bool wallcheck,
         bool rescheck,
@@ -43,7 +44,7 @@ class colision
         if (side_one
             && side_two)
         {
-            if (tilemap != 1)
+            if (tilemapCheck)
             {
                 if (rescheck)
                 {
@@ -60,7 +61,8 @@ class colision
                 int[,] mapOfTiles,
                 ref int affected_varx,
                 ref int affected_vary,
-                bool[] side_touching_wall)
+                bool[] side_touching_wall,
+                int checkedNum)
     {
         Rectangle[] collision_detector =
         {
@@ -177,7 +179,7 @@ class colision
                 {
                     for (int x = left_tile; x <= right_tile; x++)
                     {
-                        if (mapOfTiles[y, x] == 1)
+                        if (mapOfTiles[y, x] == checkedNum)
                         {
                             Rectangle tile_check = new Rectangle(x * tile_size, y * tile_size, tile_size, tile_size);
                             if (isgoingleft == true)
@@ -190,7 +192,7 @@ class colision
                                         f_slope_checkII(
                                             tile_check.Y - relivant_rectangle.Y + tile_size >= (tile_check.X + tile_size - relivant_rectangle.X) * slope,
                                             tile_check.Y - relivant_rectangle.Y <= (tile_check.X + tile_size - relivant_rectangle.X) * slope + player.Height,
-                                            mapOfTiles[y, x + 1],
+                                            mapOfTiles[y, x + 1] != checkedNum,
                                             ref x_restricter, ref side_touching_wall[0],
                                             x_restricter < tile_check.X + tile_size,
                                             tile_check.X + tile_size);
@@ -200,12 +202,10 @@ class colision
                                         if (affected_varx != 0
                                             && slope != 0)
                                         {
-                                            f_slope_check(
-                                                tile_check.X - relivant_rectangle.X,
-                                                tile_size,
-                                                (tile_check.Y + tile_size - relivant_rectangle.Y) / slope,
-                                                0, player.Width,
-                                                mapOfTiles[y + 1, x],
+                                            f_slope_checkII(
+                                                tile_check.X - relivant_rectangle.X + tile_size >= (tile_check.Y + tile_size - relivant_rectangle.Y) / slope,
+                                                tile_check.X - relivant_rectangle.X <= (tile_check.Y + tile_size - relivant_rectangle.Y) / slope + player.Width,
+                                                mapOfTiles[y + 1, x] != checkedNum,
                                                 ref y_restricter, ref side_touching_wall[2],
                                                 y_restricter < tile_check.Y + tile_size,
                                                 tile_check.Y + tile_size);
@@ -215,7 +215,7 @@ class colision
                                     {
                                         if (tile_check.Y + tile_size - relivant_rectangle.Y <= -affected_vary)
                                         {
-                                            if (mapOfTiles[y + 1, x] != 1)
+                                            if (mapOfTiles[y + 1, x] != checkedNum)
                                             {
                                                 if (y_restricter < tile_check.Y + tile_size)
                                                 {
@@ -232,12 +232,10 @@ class colision
                                 {
                                     if (tile_check.X + tile_size - relivant_rectangle.X <= affected_varx)
                                     {
-                                        f_slope_check(
-                                            tile_check.Y - relivant_rectangle.Y,
-                                            tile_size,
-                                            relivant_rectangle.Height + (tile_check.X + tile_size - relivant_rectangle.X) * slope,
-                                            player.Height, 0,
-                                            mapOfTiles[y, x + 1],
+                                        f_slope_checkII(
+                                            tile_check.Y - relivant_rectangle.Y  + tile_size >= relivant_rectangle.Height + (tile_check.X + tile_size - relivant_rectangle.X) * slope - player.Height,
+                                            tile_check.Y - relivant_rectangle.Y <= relivant_rectangle.Height + (tile_check.X + tile_size - relivant_rectangle.X) * slope,
+                                            mapOfTiles[y, x + 1] != checkedNum,
                                             ref x_restricter, ref side_touching_wall[0],
                                             x_restricter < tile_check.X + tile_size,
                                             tile_check.X + tile_size);
@@ -248,12 +246,10 @@ class colision
                                         if (affected_varx != 0
                                             && slope != 0)
                                         {
-                                            f_slope_check(
-                                                tile_check.X - relivant_rectangle.X,
-                                                tile_size,
-                                                (relivant_rectangle.Y + relivant_rectangle.Height - tile_check.Y) / -slope,
-                                                0, player.Width,
-                                                mapOfTiles[y - 1, x],
+                                            f_slope_checkII(
+                                                tile_check.X - relivant_rectangle.X  + tile_size >= (relivant_rectangle.Y + relivant_rectangle.Height - tile_check.Y) / -slope,
+                                                tile_check.X - relivant_rectangle.X <= (relivant_rectangle.Y + relivant_rectangle.Height - tile_check.Y) / -slope + player.Width,
+                                                mapOfTiles[y - 1, x] != checkedNum,
                                                 ref y_restricter, ref side_touching_wall[3],
                                                 y_restricter > tile_check.Y,
                                                 tile_check.Y);
@@ -263,7 +259,7 @@ class colision
                                     {
                                         if (relivant_rectangle.Y + relivant_rectangle.Height - tile_check.Y <= affected_vary)
                                         {
-                                            if (mapOfTiles[y - 1, x] != 1)
+                                            if (mapOfTiles[y - 1, x] != checkedNum)
                                             {
                                                 if (y_restricter > tile_check.Y)
                                                 {
@@ -283,12 +279,10 @@ class colision
                                 {
                                     if (relivant_rectangle.X + relivant_rectangle.Width - tile_check.X <= -affected_varx)
                                     {
-                                        f_slope_check(
-                                            tile_check.Y - relivant_rectangle.Y,
-                                            tile_size,
-                                            (relivant_rectangle.X + relivant_rectangle.Width - tile_check.X) * slope,
-                                            0, player.Height,
-                                            mapOfTiles[y, x - 1],
+                                        f_slope_checkII(
+                                            tile_check.Y - relivant_rectangle.Y  + tile_size >= (relivant_rectangle.X + relivant_rectangle.Width - tile_check.X) * slope,
+                                            tile_check.Y - relivant_rectangle.Y <= (relivant_rectangle.X + relivant_rectangle.Width - tile_check.X) * slope + player.Height,
+                                            mapOfTiles[y, x - 1] != checkedNum,
                                             ref x_restricter, ref side_touching_wall[1],
                                             x_restricter > tile_check.X,
                                             tile_check.X);
@@ -297,12 +291,10 @@ class colision
                                     {
                                         if (slope != 0)
                                         {
-                                            f_slope_check(
-                                                tile_check.X - relivant_rectangle.X,
-                                                tile_size,
-                                                relivant_rectangle.Width + (tile_check.Y + tile_size - relivant_rectangle.Y) / slope,
-                                                player.Width, 0,
-                                                mapOfTiles[y + 1, x],
+                                            f_slope_checkII(
+                                                tile_check.X - relivant_rectangle.X  + tile_size >= relivant_rectangle.Width + (tile_check.Y + tile_size - relivant_rectangle.Y) / slope - player.Width,
+                                                tile_check.X - relivant_rectangle.X <= relivant_rectangle.Width + (tile_check.Y + tile_size - relivant_rectangle.Y) / slope,
+                                                mapOfTiles[y + 1, x] != checkedNum,
                                                 ref y_restricter, ref side_touching_wall[2],
                                                 y_restricter < tile_check.Y + tile_size, tile_check.Y + tile_size);
                                         }
@@ -314,12 +306,10 @@ class colision
                                 {
                                     if (relivant_rectangle.X + relivant_rectangle.Width - tile_check.X <= -affected_varx)
                                     {
-                                        f_slope_check(
-                                            (tile_check.Y - relivant_rectangle.Y),
-                                            tile_size,
-                                            (relivant_rectangle.Height - (relivant_rectangle.X + relivant_rectangle.Width - tile_check.X) * slope),
-                                            player.Height, 0,
-                                            mapOfTiles[y, x - 1],
+                                        f_slope_checkII(
+                                            tile_check.Y - relivant_rectangle.Y  + tile_size >= (relivant_rectangle.Height - (relivant_rectangle.X + relivant_rectangle.Width - tile_check.X) * slope) - player.Height,
+                                            tile_check.Y - relivant_rectangle.Y <= (relivant_rectangle.Height - (relivant_rectangle.X + relivant_rectangle.Width - tile_check.X) * slope) ,
+                                            mapOfTiles[y, x - 1] != checkedNum,
                                             ref x_restricter, ref side_touching_wall[1],
                                             x_restricter > tile_check.X,
                                             tile_check.X);
@@ -328,12 +318,10 @@ class colision
                                     {
                                         if (slope != 0)
                                         {
-                                            f_slope_check(
-                                                tile_check.X - relivant_rectangle.X,
-                                                tile_size,
-                                                relivant_rectangle.Width - (relivant_rectangle.Y + relivant_rectangle.Height - tile_check.Y) / slope,
-                                                player.Width, 0,
-                                                mapOfTiles[y - 1, x],
+                                            f_slope_checkII(
+                                                tile_check.X - relivant_rectangle.X >= relivant_rectangle.Width - (relivant_rectangle.Y + relivant_rectangle.Height - tile_check.Y) / slope - player.Width,
+                                                tile_check.X - relivant_rectangle.X <= relivant_rectangle.Width - (relivant_rectangle.Y + relivant_rectangle.Height - tile_check.Y) / slope,
+                                                mapOfTiles[y - 1, x] != checkedNum,
                                                 ref y_restricter, ref side_touching_wall[3],
                                                 y_restricter > tile_check.Y,
                                                 tile_check.Y);
