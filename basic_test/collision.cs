@@ -6,32 +6,7 @@ using System.IO;
 
 class colision
 {
-    
-    static public void f_slope_check(
-        int till_rec_dif,
-        int tilesize,
-        double div_slope,
-        int player_dem_neg,
-        int player_dem_pos,
-        int tilemap,
-        ref int resistance,
-        ref bool wallcheck,
-        bool rescheck,
-        int change)
-    {
-        if (till_rec_dif + tilesize >= div_slope - player_dem_neg
-            && till_rec_dif <= div_slope + player_dem_pos)
-        {
-            if (tilemap != 1)
-            {
-                if (rescheck)
-                {
-                    resistance = change;
-                    wallcheck = true;
-                }
-            }
-        }
-    }
+   
     static public void f_slope_checkII(
         bool side_one,
         bool side_two,
@@ -61,7 +36,7 @@ class colision
                 int[,] mapOfTiles,
                 ref int affected_varx,
                 ref int affected_vary,
-                bool[] side_touching_wall,
+                ref bool[] side_touching_wall,
                 int checkedNum)
     {
         Rectangle[] collision_detector =
@@ -319,7 +294,7 @@ class colision
                                         if (slope != 0)
                                         {
                                             f_slope_checkII(
-                                                tile_check.X - relivant_rectangle.X >= relivant_rectangle.Width - (relivant_rectangle.Y + relivant_rectangle.Height - tile_check.Y) / slope - player.Width,
+                                                tile_check.X - relivant_rectangle.X + tile_size>= relivant_rectangle.Width - (relivant_rectangle.Y + relivant_rectangle.Height - tile_check.Y) / slope - player.Width,
                                                 tile_check.X - relivant_rectangle.X <= relivant_rectangle.Width - (relivant_rectangle.Y + relivant_rectangle.Height - tile_check.Y) / slope,
                                                 mapOfTiles[y - 1, x] != checkedNum,
                                                 ref y_restricter, ref side_touching_wall[3],

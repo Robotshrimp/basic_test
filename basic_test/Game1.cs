@@ -24,6 +24,7 @@ namespace basic_test
         double zoom = 1;
         double edit_zoom = 1;
         int tilesize = 96;
+        bool dead = false;
         bool is_crouching = false;
         bool exiting = false;
         GraphicsDeviceManager graphics;
@@ -38,7 +39,7 @@ namespace basic_test
         private Texture2D bar;
         private Texture2D grid;
         private Texture2D transparent;
-
+        private Texture2D spikes;
 
         private Texture2D b_play;
         private Texture2D b_exit;
@@ -272,9 +273,38 @@ namespace basic_test
             }
         }
         #endregion
+        #region list to array
+        static public void f_convert(ref int[,] output, List<List<int>> input)
+        {
+            output = new int[input.Count, input[0].Count];
+            for (int y = 0; y < output.GetLength(0); y++)
+            {
+                for (int x = 0; x < output.GetLength(1); x++)
+                {
+                    output[y, x] = input[y][x];
+                }
+            }
+        }
         #endregion
-        
+        #endregion
 
+        /*   test_tilemap = new int[edit_sizeY + 2, edit_sizeX + 2];
+                for (int y = 0; y < test_tilemap.GetLength(0); y++)
+                {
+                    for (int x = 0; x < test_tilemap.GetLength(1); x++)
+                    {
+                        if (y == 0 || y == test_tilemap.GetLength(0) - 1 ||
+                            x == 0 || x == test_tilemap.GetLength(1) - 1)
+                        {
+                            test_tilemap[y, x] = 1;
+                        }
+                        else if (y <= test_tilemap.GetLength(0) - 2 && x <= test_tilemap.GetLength(1) - 2)
+                        {
+                            test_tilemap[y, x] = edit_tilemap[y - 1][x - 1];
+                        }
+                    }
+                }
+                */
         /// <summary>
         /// LoadContent will be called once per game and is the place to load
         /// all of your content.play
@@ -290,7 +320,7 @@ namespace basic_test
             bar = Content.Load<Texture2D>("bar");
             grid = Content.Load<Texture2D>("grid");
             transparent = Content.Load<Texture2D>("Room Tiles/transparent");
-
+            spikes = Content.Load<Texture2D>("spikes");
             //temporary
 
             b_play = Content.Load<Texture2D>("button/play");
@@ -712,63 +742,68 @@ namespace basic_test
                 }
                 if (f == 3)
                 {
-                    if (Keyboard.GetState().IsKeyDown(Keys.Left))
+                    if (Keyboard.GetState().IsKeyDown(Keys.Down))
                     {
                         spikeSide = 0;
                     }
-                    if (Keyboard.GetState().IsKeyDown(Keys.Up))
+                    if (Keyboard.GetState().IsKeyDown(Keys.Left))
                     {
                         spikeSide = 1;
                     }
-                    if (Keyboard.GetState().IsKeyDown(Keys.Right))
+                    if (Keyboard.GetState().IsKeyDown(Keys.Up))
                     {
                         spikeSide = 2;
                     }
-                    if (Keyboard.GetState().IsKeyDown(Keys.Down))
+                    if (Keyboard.GetState().IsKeyDown(Keys.Right))
                     {
                         spikeSide = 3;
                     }
-                    if (mouseState.LeftButton == ButtonState.Pressed &
+                    if (edit_tilemap.Count == edit_sizeY &
+                        edit_tilemap[edit_tilemap.Count - 1].Count == edit_sizeX)
+                    {
+                        if (mouseState.LeftButton == ButtonState.Pressed &
                         y < edit_sizeY & y >= 0 &
                         x < edit_sizeX)
-                    {
-                        switch (spikeSide)
                         {
-                            case 0:
-
-                                break;
-                            case 1:
-
-                                break;
-                            case 2:
-
-                                break;
-                            case 3:
-
-                                break;
-                            default:
-                                break;
+                            switch (spikeSide)
+                            {
+                                case 0:
+                                    edit_spikesUp[y + 1][x] = 1;
+                                    break;
+                                case 1:
+                                    edit_spikesRight[y][x - 1] = 1;
+                                    break;
+                                case 2:
+                                    edit_spikesDown[y - 1][x] = 1;
+                                    break;
+                                case 3:
+                                    edit_spikesLeft[y][x + 1] = 1;
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
-                    }
-                    if (mouseState.RightButton == ButtonState.Pressed &
-                        y < edit_sizeY & y >= 0 &
-                        x < edit_sizeX)
-                    {
-                        if (spikeSide == 0)
+                        if (mouseState.RightButton == ButtonState.Pressed &
+                            y < edit_sizeY & y >= 0 &
+                            x < edit_sizeX)
                         {
-
-                        }
-                        if (spikeSide == 1)
-                        {
-
-                        }
-                        if (spikeSide == 2)
-                        {
-
-                        }
-                        if (spikeSide == 3)
-                        {
-
+                            switch (spikeSide)
+                            {
+                                case 0:
+                                    edit_spikesUp[y + 1][x] = 0;
+                                    break;
+                                case 1:
+                                    edit_spikesRight[y][x - 1] = 0;
+                                    break;
+                                case 2:
+                                    edit_spikesDown[y - 1][x] = 0;
+                                    break;
+                                case 3:
+                                    edit_spikesLeft[y][x + 1] = 0;
+                                    break;
+                                default:
+                                    break;
+                            }
                         }
                     }
                 }
@@ -796,6 +831,22 @@ namespace basic_test
             if (gamestate == "playing" ||
                 gamestate == "testing")
             {
+                #region spikes
+                int[,] spike_calculation = { { 0 } };
+                int x = 0;
+                int y = 1;
+                f_convert(ref spike_calculation, edit_spikesUp);
+                bool[] isImpailed = { false, false, false, false };
+                f_collision._collide(ref _player, tilesize, spike_calculation, ref x, ref y, ref isImpailed, 1);
+                if (isImpailed[3])
+                {
+                    dead = true;
+                }
+                else
+                {
+                    dead = false;
+                }
+                #endregion
                 #region MOVEMENT update
                 int[,] usedTileMap = tileMap;
                 if (gamestate == "testing")
@@ -814,7 +865,7 @@ namespace basic_test
                     usedTileMap,
                     ref x_velocityLeft,
                     ref y_velocityDown,
-                    iscoliding,
+                    ref iscoliding,
                     1);
                     _player.X -= x_velocityLeft;
                     _player.Y += y_velocityDown;
@@ -845,16 +896,16 @@ namespace basic_test
                         aircheck[3] = false;
                         int X = 1;
                         int Y = -1;
-                        f_collision._collide(ref _player, tilesize, usedTileMap, ref X, ref Y, aircheck, 1);
+                        f_collision._collide(ref _player, tilesize, usedTileMap, ref X, ref Y, ref aircheck, 1);
                         X = 1;
                         Y = 1;
-                        f_collision._collide(ref _player, tilesize, usedTileMap, ref X, ref Y, aircheck, 1);
+                        f_collision._collide(ref _player, tilesize, usedTileMap, ref X, ref Y, ref aircheck, 1);
                         X = -1;
                         Y = -1;
-                        f_collision._collide(ref _player, tilesize, usedTileMap, ref X, ref Y, aircheck, 1);
+                        f_collision._collide(ref _player, tilesize, usedTileMap, ref X, ref Y, ref aircheck, 1);
                         X = -1;
                         Y = 1;
-                        f_collision._collide(ref _player, tilesize, usedTileMap, ref X, ref Y, aircheck, 1);
+                        f_collision._collide(ref _player, tilesize, usedTileMap, ref X, ref Y, ref aircheck, 1);
                         iscoliding[0] = aircheck[0];
                         iscoliding[1] = aircheck[1];
                         iscoliding[2] = aircheck[2];
@@ -1307,7 +1358,7 @@ namespace basic_test
                                 grid_tile, 
                                 Color.Red);
                         }
-                        if (edit_tilemap[y][x] == 1)
+                        else if (edit_tilemap[y][x] == 1)
                         {
                             spriteBatch.Draw(standurdised_box, 
                                 grid_tile, 
@@ -1315,11 +1366,99 @@ namespace basic_test
                         }
                     }
                 }
+                if (f == 3)
+                {
+                    switch (spikeSide)
+                    {
+                        case 0:
+                            spriteBatch.Draw(spikes,
+                                new Rectangle(
+                                    (int)((int)(mousepos_x / (tilesize * edit_zoom)) * (tilesize * edit_zoom)), 
+                                    (int)((int)(mousepos_y / (tilesize * edit_zoom)) * (tilesize * edit_zoom)), 
+                                    (int)(tilesize * edit_zoom), 
+                                    (int)(tilesize * edit_zoom)),
+                                new Rectangle(0, 0, 16, 16),
+                                Color.Red);
+                            break;
+                        case 1:
+                            spriteBatch.Draw(spikes,
+                                new Rectangle(
+                                    (int)((int)(mousepos_x / (tilesize * edit_zoom)) * (tilesize * edit_zoom)),
+                                    (int)((int)(mousepos_y / (tilesize * edit_zoom)) * (tilesize * edit_zoom)),
+                                    (int)(tilesize * edit_zoom),
+                                    (int)(tilesize * edit_zoom)),
+                                new Rectangle(16, 0, 16, 16),
+                                Color.Red);
+                            break;
+                        case 2:
+                            spriteBatch.Draw(spikes,
+                                new Rectangle(
+                                    (int)((int)(mousepos_x / (tilesize * edit_zoom)) * (tilesize * edit_zoom)),
+                                    (int)((int)(mousepos_y / (tilesize * edit_zoom)) * (tilesize * edit_zoom)),
+                                    (int)(tilesize * edit_zoom),
+                                    (int)(tilesize * edit_zoom)),
+                                new Rectangle(16, 16, 16, 16),
+                                Color.Red);
+                            break;
+                        case 3:
+                            spriteBatch.Draw(spikes,
+                                new Rectangle(
+                                    (int)((int)(mousepos_x / (tilesize * edit_zoom)) * (tilesize * edit_zoom)),
+                                    (int)((int)(mousepos_y / (tilesize * edit_zoom)) * (tilesize * edit_zoom)),
+                                    (int)(tilesize * edit_zoom),
+                                    (int)(tilesize * edit_zoom)),
+                                new Rectangle(0, 16, 16, 16),
+                                Color.Red);
+                            break;
+                    }
+                }
                 f_fill.f_fill(ref edit_spikesUp, edit_sizeX, edit_sizeY);
                 f_fill.f_fill(ref edit_spikesRight, edit_sizeX, edit_sizeY);
                 f_fill.f_fill(ref edit_spikesDown, edit_sizeX, edit_sizeY);
                 f_fill.f_fill(ref edit_spikesLeft, edit_sizeX, edit_sizeY);
-
+                for (int y = 0; y < edit_sizeY; y++)
+                {
+                    for (int x = 0; x < edit_sizeX; x++)
+                    {
+                        Rectangle grid_tile = new Rectangle(
+                            (int)(x * tilesize * used_zoom) - offsetX,
+                            (int)(y * tilesize * used_zoom) + 192 - offsetY,
+                            (int)(tilesize * used_zoom),
+                            (int)(tilesize * used_zoom));
+                        if (edit_spikesUp[y][x] == 1)
+                        {
+                            grid_tile.Y -= (int)(tilesize * zoom);
+                            spriteBatch.Draw(spikes,
+                                grid_tile,
+                                new Rectangle(0, 0, 16, 16),
+                                Color.Red);
+                        }
+                        if (edit_spikesRight[y][x] == 1)
+                        {
+                            grid_tile.X += (int)(tilesize * zoom);
+                            spriteBatch.Draw(spikes,
+                                grid_tile,
+                                new Rectangle(16, 0, 16, 16),
+                                Color.Red);
+                        }
+                        if (edit_spikesDown[y][x] == 1)
+                        {
+                            grid_tile.Y += (int)(tilesize * zoom);
+                            spriteBatch.Draw(spikes,
+                                grid_tile,
+                                new Rectangle(16, 16, 16, 16),
+                                Color.Red);
+                        }
+                        if (edit_spikesLeft[y][x] == 1)
+                        {
+                            grid_tile.X -= (int)(tilesize * zoom);
+                            spriteBatch.Draw(spikes,
+                                grid_tile,
+                                new Rectangle(0, 16, 16, 16),
+                                Color.Red);
+                        }
+                    }
+                }
                 if (f == 2)
                 {
                     f_fill.f_fill(ref edit_roomTilemap, edit_sizeX, edit_sizeY);
@@ -1339,56 +1478,56 @@ namespace basic_test
                                     new Rectangle(16, 16, 16, 16),
                                     Color.Green);
                             }
-                            if (edit_roomTilemap[y][x] == 2)
+                            else if (edit_roomTilemap[y][x] == 2)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
                                     new Rectangle(0, 0, 16, 16),
                                     Color.Green);
                             }
-                            if (edit_roomTilemap[y][x] == 3)
+                            else if (edit_roomTilemap[y][x] == 3)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
                                     new Rectangle(16, 0, 16, 16),
                                     Color.Green);
                             }
-                            if (edit_roomTilemap[y][x] == 4)
+                            else if (edit_roomTilemap[y][x] == 4)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
                                     new Rectangle(32, 0, 16, 16),
                                     Color.Green);
                             }
-                            if (edit_roomTilemap[y][x] == 5)
+                            else if (edit_roomTilemap[y][x] == 5)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
                                     new Rectangle(32, 16, 16, 16),
                                     Color.Green);
                             }
-                            if (edit_roomTilemap[y][x] == 6)
+                            else if (edit_roomTilemap[y][x] == 6)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
                                     new Rectangle(32, 32, 16, 16),
                                     Color.Green);
                             }
-                            if (edit_roomTilemap[y][x] == 7)
+                            else if (edit_roomTilemap[y][x] == 7)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
                                     new Rectangle(16, 32, 16, 16),
                                     Color.Green);
                             }
-                            if (edit_roomTilemap[y][x] == 8)
+                            else if (edit_roomTilemap[y][x] == 8)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
                                     new Rectangle(0, 32, 16, 16),
                                     Color.Green);
                             }
-                            if (edit_roomTilemap[y][x] == 9)
+                            else if (edit_roomTilemap[y][x] == 9)
                             {
                                 spriteBatch.Draw(transparent,
                                     grid_tile,
@@ -1421,8 +1560,8 @@ namespace basic_test
                 spriteBatch.DrawString(font, "lef :" + iscoliding[0] + "  rit :" + iscoliding[1], new Vector2(50, 90 + variation), Color.White);
                 spriteBatch.DrawString(font, "x-speed :" + x_velocityLeft + "  Y-speed :" + y_velocityDown, new Vector2(50, 110 + variation), Color.White);
                 spriteBatch.DrawString(font, "camra_move_x :" + camera_move_x + "  camera_move_y :" + camera_move_y, new Vector2(50, 130 + variation), Color.White);
-                spriteBatch.DrawString(font, "temp 1 :" + camera_moveTo_x + "  temp 2 :" + level.Width, new Vector2(50, 150 + variation), Color.White);
-                spriteBatch.DrawString(font, "temp 3 :" + gamestate + "  temp 4 :" + r_level.X, new Vector2(50, 170 + variation), Color.White);
+                spriteBatch.DrawString(font, "temp 1 :" + dead + "  temp 2 :" + level.Width, new Vector2(50, 150 + variation), Color.White);
+                spriteBatch.DrawString(font, "temp 3 :" + gamestate + "  temp 4 :" + spikeSide, new Vector2(50, 170 + variation), Color.White);
             }
             //spriteBatch.Draw(Player, level_rec, Color.Black);
             spriteBatch.Draw(pointer, new Rectangle(mousepos_x, mousepos_y, 35, 45), Color.White); 
