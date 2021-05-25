@@ -71,6 +71,7 @@ namespace basic_test
         List<List<int>> edit_spikesRight = new List<List<int>>();
         List<List<int>> edit_spikesDown = new List<List<int>>();
         List<List<int>> edit_spikesLeft = new List<List<int>>();
+        int[,] spike_calculation = { { 0 } };
         int edit_currentRoom = 0;
         int test_currentRoom = 0;
         int first_pointX;
@@ -102,17 +103,17 @@ namespace basic_test
 
         //horozontal
 
-        private int speed = 6;
-        private int friction = 6;
-        private int speedcap = 12;
+        private int speed = 8;
+        private int friction = 8;
+        private int speedcap = 16;
 
         //vertical
         
-        private int fallcap1 = 18;
-        private int fallcap2 = 24;
+        private int fallcap1 = 24;
+        private int fallcap2 = 27;
         private int drag = 2;
         private int gravspeed = 3;
-        private int jumpspeed = 20;
+        private int jumpspeed = 24;
         private bool autojustpreventer = false;
 
         int climb_speed = -6;
@@ -122,10 +123,10 @@ namespace basic_test
 
         //horozontal
 
-        private double t_accelerationDelay = 0.1;
+        private double t_accelerationDelay = 5;
         private double C_timeSinceLastAccelerationUpdate = 0;
 
-        private double t_fricdelay = 0.05;
+        private double t_fricdelay = 4;
         private double C_timeSinceLastFrictionUpdate = 0;
 
         //vertical
@@ -133,15 +134,15 @@ namespace basic_test
         private double t_jumpslowdowndelay = 0;
         private double C_timesincelastjumpslowdown = 0;
 
-        private double jumpvariation_upper = 0.2;
-        private double jumpvariation_lower = 0.1;
+        private double jumpvariation_upper = 6;
+        private double jumpvariation_lower = 3;
         private double _timetilljumpslowdown = 0;
 
         private double falldelay = 0;
         private double _timesincelastfallacc = 0;
 
-        private double airresdelay = 0.1;
-        private double _timesincelastairrescheck = 0;
+        private double airresdelay = 5;
+        private double C_timesincelastairrescheck = 0;
 
         bool wall_climb = false;
 
@@ -464,6 +465,7 @@ namespace basic_test
                 pressed_testButton = true;
                 if (gamestate != "testing")
                 {
+                    f_convert(ref spike_calculation, edit_spikesUp);
                     gamestate = "testing";
                 }
                 else
@@ -768,16 +770,16 @@ namespace basic_test
                             switch (spikeSide)
                             {
                                 case 0:
-                                    edit_spikesUp[y + 1][x] = 1;
+                                    edit_spikesUp[y + 2][x + 1] = 1;
                                     break;
                                 case 1:
-                                    edit_spikesRight[y][x - 1] = 1;
+                                    edit_spikesRight[y][x] = 1;
                                     break;
                                 case 2:
                                     edit_spikesDown[y - 1][x] = 1;
                                     break;
                                 case 3:
-                                    edit_spikesLeft[y][x + 1] = 1;
+                                    edit_spikesLeft[y + 1][x + 2] = 1;
                                     break;
                                 default:
                                     break;
@@ -790,16 +792,16 @@ namespace basic_test
                             switch (spikeSide)
                             {
                                 case 0:
-                                    edit_spikesUp[y + 1][x] = 0;
+                                    edit_spikesUp[y + 2][x + 1] = 0;
                                     break;
                                 case 1:
-                                    edit_spikesRight[y][x - 1] = 0;
+                                    edit_spikesRight[y][x] = 0;
                                     break;
                                 case 2:
                                     edit_spikesDown[y - 1][x] = 0;
                                     break;
                                 case 3:
-                                    edit_spikesLeft[y][x + 1] = 0;
+                                    edit_spikesLeft[y + 1][x + 2] = 0;
                                     break;
                                 default:
                                     break;
@@ -832,23 +834,47 @@ namespace basic_test
                 gamestate == "testing")
             {
                 #region spikes
-                int[,] spike_calculation = { { 0 } };
                 int x = 0;
                 int y = 1;
-                f_convert(ref spike_calculation, edit_spikesUp);
                 bool[] isImpailed = { false, false, false, false };
+                f_convert(ref spike_calculation, edit_spikesUp);
                 f_collision._collide(ref _player, tilesize, spike_calculation, ref x, ref y, ref isImpailed, 1);
                 if (isImpailed[3])
                 {
                     dead = true;
                 }
-                else
+                x = 1;
+                y = 0;
+                f_convert(ref spike_calculation, edit_spikesRight);
+                f_collision._collide(ref _player, tilesize, spike_calculation, ref x, ref y, ref isImpailed, 1);
+                if (isImpailed[0])
+                {
+                    dead = true;
+                }
+                y = -1;
+                x = 0;
+                f_convert(ref spike_calculation, edit_spikesDown);
+                f_collision._collide(ref _player, tilesize, spike_calculation, ref x, ref y, ref isImpailed, 1);
+                if (isImpailed[2])
+                {
+                    dead = true;
+                }
+                x = -1;
+                y = 0;
+                f_convert(ref spike_calculation, edit_spikesLeft);
+                f_collision._collide(ref _player, tilesize, spike_calculation, ref x, ref y, ref isImpailed, 1);
+                if (isImpailed[1])
+                {
+                    dead = true;
+                }
+
+                if (!(isImpailed[0] || isImpailed[1] || isImpailed[2] || isImpailed[3]))
                 {
                     dead = false;
                 }
                 #endregion
                 #region MOVEMENT update
-                int[,] usedTileMap = tileMap;
+                    int[,] usedTileMap = tileMap;
                 if (gamestate == "testing")
                 {
                     usedTileMap = test_tilemap;
@@ -878,18 +904,16 @@ namespace basic_test
                     {
                         x_velocityLeft = 0;
                     }
-                    if (iscoliding[2] == true
-                        | iscoliding[3] == true)
+                    if (iscoliding[2] == true & y_velocityDown < 0)
                     {
                         y_velocityDown = 0;
                     }
-                    if (iscoliding[3] == true)
+                    if (iscoliding[3] == true & y_velocityDown > 0)
                     {
                         y_velocityDown = 0;
                     }
                     if (true)
                     {
-
                         aircheck[0] = false;
                         aircheck[1] = false;
                         aircheck[2] = false;
@@ -1023,19 +1047,24 @@ namespace basic_test
                     {
                         if (Keyboard.GetState().IsKeyDown(Keys.D)
                             & !Keyboard.GetState().IsKeyDown(Keys.A)
-                        & (x_velocityLeft > -speedcap)
-                        & iscoliding[1] == false)
+                            & iscoliding[1] == false)
                         {
-                            x_velocityLeft -= speed;
+                            if (x_velocityLeft > -speedcap)
+                                x_velocityLeft -= speed;
+                            else
+                                x_velocityLeft = -speedcap;
+                            
                             C_timeSinceLastAccelerationUpdate = 0;
                             iscoliding[0] = false;
                         }
                         if (Keyboard.GetState().IsKeyDown(Keys.A)
                             & !Keyboard.GetState().IsKeyDown(Keys.D)
-                        & (x_velocityLeft < speedcap)
-                        & iscoliding[0] == false)
+                            & iscoliding[0] == false)
                         {
-                            x_velocityLeft += speed;
+                            if (x_velocityLeft < speedcap)
+                                x_velocityLeft += speed;
+                            else
+                                x_velocityLeft = speedcap;
                             C_timeSinceLastAccelerationUpdate = 0;
                             iscoliding[1] = false;
                         }
@@ -1128,10 +1157,10 @@ namespace basic_test
 
 
                 if (y_velocityDown > fallcap2
-                    & _timesincelastairrescheck < airresdelay)
+                    & C_timesincelastairrescheck < airresdelay)
                 {
                     y_velocityDown -= drag;
-                    _timesincelastairrescheck = 0;
+                    C_timesincelastairrescheck = 0;
                 }
                 if ((!Keyboard.GetState().IsKeyDown(Keys.Space)
                     & C_timesincelastjumpslowdown >= t_jumpslowdowndelay
@@ -1168,7 +1197,7 @@ namespace basic_test
                         }
                         C_timeSinceLastFrictionUpdate = 0;
                     }
-                    else if (_timesincelastairrescheck > airresdelay)
+                    if (C_timesincelastairrescheck > airresdelay & iscoliding[3] == false)
                     {
                         if (x_velocityLeft >= drag)
                         {
@@ -1178,7 +1207,7 @@ namespace basic_test
                         {
                             x_velocityLeft = 0;
                         }
-                        _timesincelastairrescheck = 0;
+                        C_timesincelastairrescheck = 0;
                     }
                 }
                 // right
@@ -1187,7 +1216,7 @@ namespace basic_test
                 & x_velocityLeft < 0)
                 | x_velocityLeft < -speedcap)
                 {
-                    if (iscoliding[3] & 
+                    if (iscoliding[3] &
                         C_timeSinceLastFrictionUpdate > t_fricdelay)
                     {
                         if (x_velocityLeft <= -friction)
@@ -1200,7 +1229,7 @@ namespace basic_test
                         }
                         C_timeSinceLastFrictionUpdate = 0;
                     }
-                    else if (_timesincelastairrescheck > airresdelay)
+                    if (C_timesincelastairrescheck > airresdelay & iscoliding[3] == false)
                     {
                         if (x_velocityLeft <= -drag)
                         {
@@ -1210,7 +1239,7 @@ namespace basic_test
                         {
                             x_velocityLeft = 0;
                         }
-                        _timesincelastairrescheck = 0;
+                        C_timesincelastairrescheck = 0;
                     }
                 }
 
@@ -1252,15 +1281,15 @@ namespace basic_test
                 #endregion
                 base.Update(gameTime);
                 #region timers
-                C_timeSinceLastAccelerationUpdate += gameTime.ElapsedGameTime.TotalSeconds;
-                C_timeSinceLastFrictionUpdate += gameTime.ElapsedGameTime.TotalSeconds;
-                _timesincelastmove += gameTime.ElapsedGameTime.TotalSeconds;
-                _timesincelastfallacc += gameTime.ElapsedGameTime.TotalSeconds;
-                _timesincelastairrescheck += gameTime.ElapsedGameTime.TotalSeconds;
-                C_timesincelastjumpslowdown += gameTime.ElapsedGameTime.TotalSeconds;
+                C_timeSinceLastAccelerationUpdate += 1;
+                C_timeSinceLastFrictionUpdate += 1;
+                _timesincelastmove += 1;
+                _timesincelastfallacc += 1;
+                C_timesincelastairrescheck += 1;
+                C_timesincelastjumpslowdown += 1;
                 if (iscoliding[3] == false)
                 {
-                    _timetilljumpslowdown += gameTime.ElapsedGameTime.TotalSeconds;
+                    _timetilljumpslowdown += 1;
                 }
                 #endregion
             } 
@@ -1317,12 +1346,22 @@ namespace basic_test
                 }
                 else
                 {
-                    spriteBatch.Draw(standurdised_box, new Rectangle(
-                        (int)((x) * used_zoom - offsetX),
-                        (int)((y - tilesize) * used_zoom - offsetY + 192),
-                        (int)(_player.Width * used_zoom),
-                        (int)(_player.Height * used_zoom)),
-                        Color.White);
+                    if (dead)
+                    {
+                        spriteBatch.Draw(standurdised_box, new Rectangle(
+                            (int)((x) * used_zoom - offsetX),
+                            (int)((y - tilesize) * used_zoom - offsetY + 192),
+                            (int)(_player.Width * used_zoom),
+                            (int)(_player.Height * used_zoom)),
+                            Color.Red);
+                    }
+                    else
+                        spriteBatch.Draw(standurdised_box, new Rectangle(
+                            (int)((x) * used_zoom - offsetX),
+                            (int)((y - tilesize) * used_zoom - offsetY + 192),
+                            (int)(_player.Width * used_zoom),
+                            (int)(_player.Height * used_zoom)),
+                            Color.White);
                 }   
             }
             if (gamestate == "paused")
@@ -1373,40 +1412,40 @@ namespace basic_test
                         case 0:
                             spriteBatch.Draw(spikes,
                                 new Rectangle(
-                                    (int)((int)(mousepos_x / (tilesize * edit_zoom)) * (tilesize * edit_zoom)), 
-                                    (int)((int)(mousepos_y / (tilesize * edit_zoom)) * (tilesize * edit_zoom)), 
-                                    (int)(tilesize * edit_zoom), 
-                                    (int)(tilesize * edit_zoom)),
+                                    (int)((int)(mousepos_x / (tilesize * used_zoom)) * (tilesize * used_zoom)), 
+                                    (int)((int)(mousepos_y / (tilesize * used_zoom)) * (tilesize * used_zoom)), 
+                                    (int)(tilesize * used_zoom), 
+                                    (int)(tilesize * used_zoom)),
                                 new Rectangle(0, 0, 16, 16),
                                 Color.Red);
                             break;
                         case 1:
                             spriteBatch.Draw(spikes,
                                 new Rectangle(
-                                    (int)((int)(mousepos_x / (tilesize * edit_zoom)) * (tilesize * edit_zoom)),
-                                    (int)((int)(mousepos_y / (tilesize * edit_zoom)) * (tilesize * edit_zoom)),
-                                    (int)(tilesize * edit_zoom),
-                                    (int)(tilesize * edit_zoom)),
+                                    (int)((int)(mousepos_x / (tilesize * used_zoom)) * (tilesize * used_zoom)),
+                                    (int)((int)(mousepos_y / (tilesize * used_zoom)) * (tilesize * used_zoom)),
+                                    (int)(tilesize * used_zoom),
+                                    (int)(tilesize * used_zoom)),
                                 new Rectangle(16, 0, 16, 16),
                                 Color.Red);
                             break;
                         case 2:
                             spriteBatch.Draw(spikes,
                                 new Rectangle(
-                                    (int)((int)(mousepos_x / (tilesize * edit_zoom)) * (tilesize * edit_zoom)),
-                                    (int)((int)(mousepos_y / (tilesize * edit_zoom)) * (tilesize * edit_zoom)),
-                                    (int)(tilesize * edit_zoom),
-                                    (int)(tilesize * edit_zoom)),
+                                    (int)((int)(mousepos_x / (tilesize * used_zoom)) * (tilesize * used_zoom)),
+                                    (int)((int)(mousepos_y / (tilesize * used_zoom)) * (tilesize * used_zoom)),
+                                    (int)(tilesize * used_zoom),
+                                    (int)(tilesize * used_zoom)),
                                 new Rectangle(16, 16, 16, 16),
                                 Color.Red);
                             break;
                         case 3:
                             spriteBatch.Draw(spikes,
                                 new Rectangle(
-                                    (int)((int)(mousepos_x / (tilesize * edit_zoom)) * (tilesize * edit_zoom)),
-                                    (int)((int)(mousepos_y / (tilesize * edit_zoom)) * (tilesize * edit_zoom)),
-                                    (int)(tilesize * edit_zoom),
-                                    (int)(tilesize * edit_zoom)),
+                                    (int)((int)(mousepos_x / (tilesize * edit_zoom)) * (tilesize * used_zoom)),
+                                    (int)((int)(mousepos_y / (tilesize * edit_zoom)) * (tilesize * used_zoom)),
+                                    (int)(tilesize * used_zoom),
+                                    (int)(tilesize * used_zoom)),
                                 new Rectangle(0, 16, 16, 16),
                                 Color.Red);
                             break;
@@ -1427,23 +1466,27 @@ namespace basic_test
                             (int)(tilesize * used_zoom));
                         if (edit_spikesUp[y][x] == 1)
                         {
-                            grid_tile.Y -= (int)(tilesize * zoom);
+                            grid_tile.Y -= (int)((tilesize * 2) * used_zoom);
+                            grid_tile.X -= (int)(tilesize * used_zoom);
                             spriteBatch.Draw(spikes,
                                 grid_tile,
                                 new Rectangle(0, 0, 16, 16),
                                 Color.Red);
+                            grid_tile.Y += (int)((tilesize * 2) * used_zoom);
+                            grid_tile.X += (int)(tilesize * used_zoom);
                         }
                         if (edit_spikesRight[y][x] == 1)
                         {
-                            grid_tile.X += (int)(tilesize * zoom);
+                            grid_tile.Y -= (int)(tilesize * used_zoom);
                             spriteBatch.Draw(spikes,
                                 grid_tile,
                                 new Rectangle(16, 0, 16, 16),
                                 Color.Red);
+                            grid_tile.Y += (int)(tilesize * used_zoom);
                         }
                         if (edit_spikesDown[y][x] == 1)
                         {
-                            grid_tile.Y += (int)(tilesize * zoom);
+                            grid_tile.Y += (int)(0 * used_zoom);
                             spriteBatch.Draw(spikes,
                                 grid_tile,
                                 new Rectangle(16, 16, 16, 16),
@@ -1451,11 +1494,14 @@ namespace basic_test
                         }
                         if (edit_spikesLeft[y][x] == 1)
                         {
-                            grid_tile.X -= (int)(tilesize * zoom);
+                            grid_tile.Y -= (int)(tilesize * used_zoom);
+                            grid_tile.X -= (int)((tilesize * 2) * used_zoom);
                             spriteBatch.Draw(spikes,
                                 grid_tile,
                                 new Rectangle(0, 16, 16, 16),
                                 Color.Red);
+                            grid_tile.Y += (int)(tilesize * used_zoom);
+                            grid_tile.X += (int)((tilesize * 2) * used_zoom);
                         }
                     }
                 }
@@ -1561,7 +1607,7 @@ namespace basic_test
                 spriteBatch.DrawString(font, "x-speed :" + x_velocityLeft + "  Y-speed :" + y_velocityDown, new Vector2(50, 110 + variation), Color.White);
                 spriteBatch.DrawString(font, "camra_move_x :" + camera_move_x + "  camera_move_y :" + camera_move_y, new Vector2(50, 130 + variation), Color.White);
                 spriteBatch.DrawString(font, "temp 1 :" + dead + "  temp 2 :" + level.Width, new Vector2(50, 150 + variation), Color.White);
-                spriteBatch.DrawString(font, "temp 3 :" + gamestate + "  temp 4 :" + spikeSide, new Vector2(50, 170 + variation), Color.White);
+                spriteBatch.DrawString(font, "temp 3 :" + C_timeSinceLastAccelerationUpdate + "  temp 4 :" + C_timesincelastairrescheck, new Vector2(50, 170 + variation), Color.White);
             }
             //spriteBatch.Draw(Player, level_rec, Color.Black);
             spriteBatch.Draw(pointer, new Rectangle(mousepos_x, mousepos_y, 35, 45), Color.White); 
