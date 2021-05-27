@@ -56,6 +56,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="movement.cs" />
     <Compile Include="fill.cs" />
     <Compile Include="save.cs" />
     <Compile Include="collision.cs" />

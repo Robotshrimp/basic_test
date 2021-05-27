@@ -111,7 +111,7 @@ namespace basic_test
         
         private int fallcap1 = 24;
         private int fallcap2 = 27;
-        private int drag = 2;
+        private int drag = 0;
         private int gravspeed = 3;
         private int jumpspeed = 24;
         private bool autojustpreventer = false;
@@ -141,7 +141,7 @@ namespace basic_test
         private double falldelay = 0;
         private double _timesincelastfallacc = 0;
 
-        private double airresdelay = 5;
+        private double airresdelay = 8;
         private double C_timesincelastairrescheck = 0;
 
         bool wall_climb = false;
@@ -159,6 +159,13 @@ namespace basic_test
             false,
         };
         private bool[] aircheck =
+        {
+            false,
+            false,
+            false,
+            false
+        };
+        bool[] isSliping = 
         {
             false,
             false,
@@ -752,13 +759,9 @@ namespace basic_test
                     {
                         spikeSide = 1;
                     }
-                    if (Keyboard.GetState().IsKeyDown(Keys.Up))
-                    {
-                        spikeSide = 2;
-                    }
                     if (Keyboard.GetState().IsKeyDown(Keys.Right))
                     {
-                        spikeSide = 3;
+                        spikeSide = 2;
                     }
                     if (edit_tilemap.Count == edit_sizeY &
                         edit_tilemap[edit_tilemap.Count - 1].Count == edit_sizeX)
@@ -776,9 +779,6 @@ namespace basic_test
                                     edit_spikesRight[y][x] = 1;
                                     break;
                                 case 2:
-                                    edit_spikesDown[y - 1][x] = 1;
-                                    break;
-                                case 3:
                                     edit_spikesLeft[y + 1][x + 2] = 1;
                                     break;
                                 default:
@@ -798,9 +798,6 @@ namespace basic_test
                                     edit_spikesRight[y][x] = 0;
                                     break;
                                 case 2:
-                                    edit_spikesDown[y - 1][x] = 0;
-                                    break;
-                                case 3:
                                     edit_spikesLeft[y + 1][x + 2] = 0;
                                     break;
                                 default:
@@ -829,50 +826,9 @@ namespace basic_test
             //                  MOVEMENT                  //
             //                                            //
             //--------------------------------------------//
-
             if (gamestate == "playing" ||
                 gamestate == "testing")
             {
-                #region spikes
-                int x = 0;
-                int y = 1;
-                bool[] isImpailed = { false, false, false, false };
-                f_convert(ref spike_calculation, edit_spikesUp);
-                f_collision._collide(ref _player, tilesize, spike_calculation, ref x, ref y, ref isImpailed, 1);
-                if (isImpailed[3])
-                {
-                    dead = true;
-                }
-                x = 1;
-                y = 0;
-                f_convert(ref spike_calculation, edit_spikesRight);
-                f_collision._collide(ref _player, tilesize, spike_calculation, ref x, ref y, ref isImpailed, 1);
-                if (isImpailed[0])
-                {
-                    dead = true;
-                }
-                y = -1;
-                x = 0;
-                f_convert(ref spike_calculation, edit_spikesDown);
-                f_collision._collide(ref _player, tilesize, spike_calculation, ref x, ref y, ref isImpailed, 1);
-                if (isImpailed[2])
-                {
-                    dead = true;
-                }
-                x = -1;
-                y = 0;
-                f_convert(ref spike_calculation, edit_spikesLeft);
-                f_collision._collide(ref _player, tilesize, spike_calculation, ref x, ref y, ref isImpailed, 1);
-                if (isImpailed[1])
-                {
-                    dead = true;
-                }
-
-                if (!(isImpailed[0] || isImpailed[1] || isImpailed[2] || isImpailed[3]))
-                {
-                    dead = false;
-                }
-                #endregion
                 #region MOVEMENT update
                     int[,] usedTileMap = tileMap;
                 if (gamestate == "testing")
@@ -886,17 +842,17 @@ namespace basic_test
                 if (_timesincelastmove >= movedelay)
                 {
                     f_collision._collide(
-                    ref _player,
-                    tilesize,
-                    usedTileMap,
-                    ref x_velocityLeft,
-                    ref y_velocityDown,
-                    ref iscoliding,
-                    1);
-                    _player.X -= x_velocityLeft;
-                    _player.Y += y_velocityDown;
-                    _timesincelastmove = 0;
-                    if (iscoliding[0] == true & x_velocityLeft > 0)
+                        ref _player,
+                        tilesize,
+                        usedTileMap,
+                        ref x_velocityLeft,
+                        ref y_velocityDown,
+                        ref iscoliding,
+                        1);
+                        _player.X -= x_velocityLeft;
+                        _player.Y += y_velocityDown;
+                        _timesincelastmove = 0;
+                    if (iscoliding[0] == true & x_velocityLeft > 0) 
                     {
                         x_velocityLeft = 0;
                     }
@@ -935,6 +891,38 @@ namespace basic_test
                         iscoliding[2] = aircheck[2];
                         iscoliding[3] = aircheck[3];
                     }
+                    #region spikes
+                    int x = 0;
+                    int y = 1;
+                    isSliping = new bool[] { false, false, false, false };
+                    f_convert(ref spike_calculation, edit_spikesUp);
+                    f_collision._collide(ref _player, tilesize, spike_calculation, ref x, ref y, ref isSliping, 1);
+                    if (isSliping[3])
+                    {
+                        dead = true;
+                    }
+                    x = 1;
+                    y = 0;
+                    f_convert(ref spike_calculation, edit_spikesRight);
+                    f_collision._collide(ref _player, tilesize, spike_calculation, ref x, ref y, ref isSliping, 1);
+                    if (isSliping[0])
+                    {
+                        dead = true;
+                    }
+                    x = -1;
+                    y = 0;
+                    f_convert(ref spike_calculation, edit_spikesLeft);
+                    f_collision._collide(ref _player, tilesize, spike_calculation, ref x, ref y, ref isSliping, 1);
+                    if (isSliping[1])
+                    {
+                        dead = true;
+                    }
+
+                    if (!(isSliping[0] || isSliping[1] || isSliping[2] || isSliping[3]))
+                    {
+                        dead = false;
+                    }
+                    #endregion
                 }
                 #endregion
                 #region camera
@@ -1076,18 +1064,42 @@ namespace basic_test
                     & Keyboard.GetState().IsKeyDown(Keys.Space)
                     & autojustpreventer == false)
                 {
-                    y_velocityDown -= jumpspeed;
                     _timetilljumpslowdown = 0;
-                    //_Squish(jumpspeed, jumpspeed * 2, ref _player);
                     iscoliding[3] = false;
                     if (Keyboard.GetState().IsKeyDown(Keys.D))
                     {
-                        x_velocityLeft -= 5;
+                        x_velocityLeft -= speed;
+                        if (Keyboard.GetState().IsKeyDown(Keys.S) &
+                            !isSliping[3])
+                        {
+                            x_velocityLeft -= 2 * speed;
+                            y_velocityDown -= jumpspeed / 2;
+                        }
+                        else
+                        {
+                            y_velocityDown -= jumpspeed;
+                        }
                     }
-                    if (Keyboard.GetState().IsKeyDown(Keys.A))
+                    else if (Keyboard.GetState().IsKeyDown(Keys.A))
                     {
-                        x_velocityLeft += 5;
+                        x_velocityLeft += speed;
+                        if (Keyboard.GetState().IsKeyDown(Keys.S) &
+                            !isSliping[3])
+                        {
+                            x_velocityLeft += 2 * speed;
+                            y_velocityDown -= jumpspeed / 2;
+                        }
+                        else
+                        {
+                            y_velocityDown -= jumpspeed;
+                        }
                     }
+                    else
+                    {
+                        y_velocityDown -= jumpspeed;
+                    }
+                
+                    
                     autojustpreventer = true;
                 }
                 if (wall_climb == true
@@ -1174,10 +1186,6 @@ namespace basic_test
                 }
                 #endregion
                 #region FRICTION
-                if (is_crouching == true)
-                {
-                    x_velocityLeft = 0;
-                }
                 // left
                 if (((!Keyboard.GetState().IsKeyDown(Keys.A)
                 | Keyboard.GetState().IsKeyDown(Keys.D))
@@ -1247,8 +1255,8 @@ namespace basic_test
                 #endregion
                 #region wall climb
                 if (Keyboard.GetState().IsKeyDown(Keys.LeftShift)
-                    & (iscoliding[1]
-                    || iscoliding[0]))
+                    & ((iscoliding[1] & !isSliping[1])
+                    || (iscoliding[0]) & !isSliping[0]))
                 {
                     wall_climb = true;
                     if (y_velocityDown > 0)
@@ -1432,16 +1440,6 @@ namespace basic_test
                         case 2:
                             spriteBatch.Draw(spikes,
                                 new Rectangle(
-                                    (int)((int)(mousepos_x / (tilesize * used_zoom)) * (tilesize * used_zoom)),
-                                    (int)((int)(mousepos_y / (tilesize * used_zoom)) * (tilesize * used_zoom)),
-                                    (int)(tilesize * used_zoom),
-                                    (int)(tilesize * used_zoom)),
-                                new Rectangle(16, 16, 16, 16),
-                                Color.Red);
-                            break;
-                        case 3:
-                            spriteBatch.Draw(spikes,
-                                new Rectangle(
                                     (int)((int)(mousepos_x / (tilesize * edit_zoom)) * (tilesize * used_zoom)),
                                     (int)((int)(mousepos_y / (tilesize * edit_zoom)) * (tilesize * used_zoom)),
                                     (int)(tilesize * used_zoom),
@@ -1483,14 +1481,6 @@ namespace basic_test
                                 new Rectangle(16, 0, 16, 16),
                                 Color.Red);
                             grid_tile.Y += (int)(tilesize * used_zoom);
-                        }
-                        if (edit_spikesDown[y][x] == 1)
-                        {
-                            grid_tile.Y += (int)(0 * used_zoom);
-                            spriteBatch.Draw(spikes,
-                                grid_tile,
-                                new Rectangle(16, 16, 16, 16),
-                                Color.Red);
                         }
                         if (edit_spikesLeft[y][x] == 1)
                         {
