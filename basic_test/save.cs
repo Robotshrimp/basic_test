@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Runtime.Serialization;
 using System.IO;
+using System.Windows.Forms;
 
 public class save : Game
 {
@@ -137,4 +138,20 @@ public class save : Game
         }
     }
     #endregion
+    public void select(ref Texture2D fileContent, ref string filePath)
+    {
+        using (OpenFileDialog openFileDialog = new OpenFileDialog())
+        {
+            openFileDialog.InitialDirectory = "c:\\";
+            openFileDialog.Filter = "png files (*.png)|*.png|All files (*.*)|*.*";
+            openFileDialog.FilterIndex = 2;
+            openFileDialog.RestoreDirectory = true;
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                //Get the path of specified file
+                filePath = openFileDialog.FileName;
+            }
+        }
+    }
 }

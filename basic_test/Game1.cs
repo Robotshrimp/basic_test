@@ -3,7 +3,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using System.IO;
+using IWshRuntimeLibrary;
 using System.Runtime.Serialization;
+using fiel = System.IO.File;
 
 namespace basic_test
 {
@@ -111,7 +113,7 @@ namespace basic_test
         
         private int fallcap1 = 24;
         private int fallcap2 = 27;
-        private int drag = 0;
+        private int drag = 2;
         private int gravspeed = 3;
         private int jumpspeed = 24;
         private bool autojustpreventer = false;
@@ -202,6 +204,11 @@ namespace basic_test
         /// </summary>
         protected override void Initialize()
         {
+
+
+
+
+
             // TODO: Add your initialization logic here
             paused = new Rectangle ((graphics.PreferredBackBufferWidth - 720) / 2, (graphics.PreferredBackBufferHeight / 2) - 280, 720, 192);
             menu = new Rectangle((graphics.PreferredBackBufferWidth - 228) / 2, (graphics.PreferredBackBufferHeight / 2), 228, 60);
@@ -217,27 +224,27 @@ namespace basic_test
             _player.Height = 108;
             pressed_x = false;
             pressed_y = false;
-            if (!File.Exists("position_x.txt"))
-                File.WriteAllText("position_x.txt", _player.X.ToString());
-            if (!File.Exists("position_y.txt"))
-                File.WriteAllText("position_y.txt", _player.Y.ToString());
-            if (!File.Exists("notrightspeed.txt"))
-                File.WriteAllText("notrightspeed.txt", x_velocityLeft.ToString());
-            if (!File.Exists("fallspeed.txt"))
-                File.WriteAllText("fallspeed.txt", y_velocityDown.ToString());
-            if (!File.Exists("list.txt"))
+            if (!fiel.Exists("position_x.txt"))
+                fiel.WriteAllText("position_x.txt", _player.X.ToString());
+            if (!fiel.Exists("position_y.txt"))
+                fiel.WriteAllText("position_y.txt", _player.Y.ToString());
+            if (!fiel.Exists("notrightspeed.txt"))
+                fiel.WriteAllText("notrightspeed.txt", x_velocityLeft.ToString());
+            if (!fiel.Exists("fallspeed.txt"))
+                fiel.WriteAllText("fallspeed.txt", y_velocityDown.ToString());
+            if (!fiel.Exists("list.txt"))
                 f_save.f_listsave(edit_tilemap, "list.txt");
-            if (!File.Exists("rooms.txt"))
+            if (!fiel.Exists("rooms.txt"))
                 f_save.f_listsave(edit_roomTilemap, "rooms_map.txt");
 
 
             f_save.f_listget("list.txt", ref edit_tilemap, ref edit_sizeX, ref edit_sizeY);
             f_save.f_listget("rooms_map.txt", ref edit_roomTilemap, ref edit_sizeX, ref edit_sizeY);
             f_save.f_recget("rooms.txt", ref edit_rooms);
-            _player.X = int.Parse(File.ReadAllText("position_x.txt"));
-            _player.Y = int.Parse(File.ReadAllText("position_y.txt"));
-            x_velocityLeft = int.Parse(File.ReadAllText("notrightspeed.txt"));
-            y_velocityDown = int.Parse(File.ReadAllText("fallspeed.txt"));
+            _player.X = int.Parse(fiel.ReadAllText("position_x.txt"));
+            _player.Y = int.Parse(fiel.ReadAllText("position_y.txt"));
+            x_velocityLeft = int.Parse(fiel.ReadAllText("notrightspeed.txt"));
+            y_velocityDown = int.Parse(fiel.ReadAllText("fallspeed.txt"));
             tileMap = new int[,]
             {
                 {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
@@ -294,6 +301,7 @@ namespace basic_test
             }
         }
         #endregion
+
         #endregion
 
         /*   test_tilemap = new int[edit_sizeY + 2, edit_sizeX + 2];
@@ -363,10 +371,10 @@ namespace basic_test
             mousepos_y = mouseState.Y;
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.C)|| exiting)
             {
-                File.WriteAllText("position_x.txt", _player.X.ToString());
-                File.WriteAllText("position_y.txt", _player.Y.ToString());
-                File.WriteAllText("notrightspeed.txt", x_velocityLeft.ToString());
-                File.WriteAllText("fallspeed.txt", y_velocityDown.ToString());
+                fiel.WriteAllText("position_x.txt", _player.X.ToString());
+                fiel.WriteAllText("position_y.txt", _player.Y.ToString());
+                fiel.WriteAllText("notrightspeed.txt", x_velocityLeft.ToString());
+                fiel.WriteAllText("fallspeed.txt", y_velocityDown.ToString());
                 f_save.f_listsave(edit_roomTilemap, "rooms_map.txt");
                 f_save.f_listsave(edit_tilemap, "list.txt");
                 f_save.f_recsave(edit_rooms, "rooms.txt");
@@ -416,10 +424,10 @@ namespace basic_test
                 gamestate == "menu")
             {
                 gamestate = "playing";
-                _player.X = int.Parse(File.ReadAllText("position_x.txt"));
-                _player.Y = int.Parse(File.ReadAllText("position_y.txt"));
-                x_velocityLeft = int.Parse(File.ReadAllText("notrightspeed.txt"));
-                y_velocityDown = int.Parse(File.ReadAllText("fallspeed.txt"));
+                _player.X = int.Parse(fiel.ReadAllText("position_x.txt"));
+                _player.Y = int.Parse(fiel.ReadAllText("position_y.txt"));
+                x_velocityLeft = int.Parse(fiel.ReadAllText("notrightspeed.txt"));
+                y_velocityDown = int.Parse(fiel.ReadAllText("fallspeed.txt"));
                 camera_moveTo_x = 0;
                 camera_moveTo_y = 0;
                 zoom = 1;
@@ -821,6 +829,12 @@ namespace basic_test
                 }
             }
             #endregion
+            if (Keyboard.GetState().IsKeyDown(Keys.I))
+            {
+                Texture2D sus = null;
+                string impos = null;
+                f_save.select(ref sus, ref impos);
+            }
             //--------------------------------------------//
             //                                            //
             //                  MOVEMENT                  //
@@ -1040,7 +1054,9 @@ namespace basic_test
                             if (x_velocityLeft > -speedcap)
                                 x_velocityLeft -= speed;
                             else
-                                x_velocityLeft = -speedcap;
+                            {
+
+                            }
                             
                             C_timeSinceLastAccelerationUpdate = 0;
                             iscoliding[0] = false;
@@ -1051,8 +1067,6 @@ namespace basic_test
                         {
                             if (x_velocityLeft < speedcap)
                                 x_velocityLeft += speed;
-                            else
-                                x_velocityLeft = speedcap;
                             C_timeSinceLastAccelerationUpdate = 0;
                             iscoliding[1] = false;
                         }
@@ -1072,8 +1086,14 @@ namespace basic_test
                         if (Keyboard.GetState().IsKeyDown(Keys.S) &
                             !isSliping[3])
                         {
-                            x_velocityLeft -= 2 * speed;
-                            y_velocityDown -= jumpspeed / 2;
+                            x_velocityLeft -= speed;
+                            y_velocityDown -= (jumpspeed * 3) / 4;
+                        }
+                        else if (Keyboard.GetState().IsKeyDown(Keys.W) &
+                            !isSliping[3])
+                        {
+                            y_velocityDown += (int)(x_velocityLeft * 1.5);
+                            x_velocityLeft += speed;
                         }
                         else
                         {
@@ -1086,8 +1106,14 @@ namespace basic_test
                         if (Keyboard.GetState().IsKeyDown(Keys.S) &
                             !isSliping[3])
                         {
-                            x_velocityLeft += 2 * speed;
-                            y_velocityDown -= jumpspeed / 2;
+                            x_velocityLeft += speed;
+                            y_velocityDown -= (jumpspeed * 3) / 4;
+                        }
+                        else if (Keyboard.GetState().IsKeyDown(Keys.W) &
+                            !isSliping[3])
+                        {
+                            y_velocityDown -= (int)(x_velocityLeft * 1.5);
+                            x_velocityLeft -= speed;
                         }
                         else
                         {
