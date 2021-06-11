@@ -224,6 +224,10 @@ namespace basic_test
             _player.Height = 108;
             pressed_x = false;
             pressed_y = false;
+
+            f_fill.f_fill(ref edit_roomTilemap, edit_sizeX, edit_sizeY);
+            f_fill.f_fill(ref edit_tilemap, edit_sizeX, edit_sizeY);
+
             if (!fiel.Exists("position_x.txt"))
                 fiel.WriteAllText("position_x.txt", _player.X.ToString());
             if (!fiel.Exists("position_y.txt"))
@@ -237,10 +241,14 @@ namespace basic_test
             if (!fiel.Exists("rooms.txt"))
                 f_save.f_listsave(edit_roomTilemap, "rooms_map.txt");
 
+            if (fiel.Exists("list.txt"))
+                f_save.f_listget("list.txt", ref edit_tilemap, ref edit_sizeX, ref edit_sizeY);
+            if (fiel.Exists("rooms_map.txt"))
+                f_save.f_listget("rooms_map.txt", ref edit_roomTilemap, ref edit_sizeX, ref edit_sizeY);
+            if (fiel.Exists("rooms.txt"))
+                f_save.f_recget("rooms.txt", ref edit_rooms);
 
-            f_save.f_listget("list.txt", ref edit_tilemap, ref edit_sizeX, ref edit_sizeY);
-            f_save.f_listget("rooms_map.txt", ref edit_roomTilemap, ref edit_sizeX, ref edit_sizeY);
-            f_save.f_recget("rooms.txt", ref edit_rooms);
+
             _player.X = int.Parse(fiel.ReadAllText("position_x.txt"));
             _player.Y = int.Parse(fiel.ReadAllText("position_y.txt"));
             x_velocityLeft = int.Parse(fiel.ReadAllText("notrightspeed.txt"));
@@ -510,6 +518,7 @@ namespace basic_test
             }
             if (gamestate == "editing")
             {
+                #region size
                 if (Keyboard.GetState().IsKeyDown(Keys.X) &
                     pressed_x == false)
                 {
@@ -579,6 +588,9 @@ namespace basic_test
                         }
                     }
                     pressed_y = true;
+                    f_fill.f_fill(ref edit_tilemap, edit_sizeX, edit_sizeY);
+                    f_fill.f_fill(ref edit_roomTilemap, edit_sizeX, edit_sizeY);
+                    #endregion
                 }
                 if (Keyboard.GetState().IsKeyDown(Keys.S))
                 {
@@ -1415,7 +1427,6 @@ namespace basic_test
             if (gamestate == "editing" ||
                 gamestate == "testing")
             {
-                f_fill.f_fill(ref edit_tilemap, edit_sizeX, edit_sizeY);
                 for (int y = 0; y < edit_sizeY; y ++)
                 {
                     for (int x = 0; x < edit_sizeX; x++)
@@ -1523,7 +1534,6 @@ namespace basic_test
                 }
                 if (f == 2)
                 {
-                    f_fill.f_fill(ref edit_roomTilemap, edit_sizeX, edit_sizeY);
                     for (int y = 0; y < edit_sizeY; y++)
                     {
                         for (int x = 0; x < edit_sizeX; x++)
