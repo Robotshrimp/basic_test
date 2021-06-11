@@ -1,0 +1,60 @@
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\BasicShape.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\basic_test.exe
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\basic_test.pdb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\MonoGame.Framework.dll
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\SharpDX.MediaFoundation.dll
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\SharpDX.dll
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\SharpDX.XAudio2.dll
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\SharpDX.DXGI.dll
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\SharpDX.Direct3D11.dll
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\SharpDX.Direct2D1.dll
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\SharpDX.XInput.dll
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\MonoGame.Framework.xml
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\SharpDX.MediaFoundation.xml
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\SharpDX.xml
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\SharpDX.XAudio2.xml
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\SharpDX.DXGI.xml
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\SharpDX.Direct3D11.xml
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\SharpDX.Direct2D1.xml
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\SharpDX.XInput.xml
+C:\Users\jiaao\source\repos\basic_test\basic_test\obj\x86\Debug\basic_test.csprojAssemblyReference.cache
+C:\Users\jiaao\source\repos\basic_test\basic_test\obj\x86\Debug\basic_test.csproj.CoreCompileInputs.cache
+C:\Users\jiaao\source\repos\basic_test\basic_test\obj\x86\Debug\basic_test.csproj.CopyComplete
+C:\Users\jiaao\source\repos\basic_test\basic_test\obj\x86\Debug\basic_test.exe
+C:\Users\jiaao\source\repos\basic_test\basic_test\obj\x86\Debug\basic_test.pdb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\bruh.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\test sheet.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\menu background.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\room 1.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\room 2.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\menu text.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\pause text.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\pointer.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\resume text.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\menu.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\exit_button.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\play_button.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\level_editer.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\bar.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\grid.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\level editer button.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\menu button.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\pause button.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\play button.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\resume button.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\save text.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\test text.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\Room Tiles\transparent.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\button\level editer.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\button\menu.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\button\pause.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\button\play.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\button\resume.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\button\save.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\button\test.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\Font.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\pause screen.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\button\exit.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\bin\Windows\x86\Debug\Content\spikes.xnb
+C:\Users\jiaao\source\repos\basic_test\basic_test\obj\x86\Debug\Interop.IWshRuntimeLibrary.dll
+C:\Users\jiaao\source\repos\basic_test\basic_test\obj\x86\Debug\basic_test.csproj.ResolveComReference.cache

@@ -1,0 +1,9 @@
+[Dd]ebugPublic/
+[Dd]ebug/
+[Rr]elease/
+[Rr]eleases/
+x64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/

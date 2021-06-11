@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<SourceFileCollection xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Profile>Reach</Profile>
+  <Platform>Windows</Platform>
+  <Config />
+  <SourceFiles>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/spikes.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/pause screen.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/button/exit.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/bar.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/BasicShape.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/button/level editer.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/button/menu.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/button/pause.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/button/play.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/button/resume.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/button/save.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/button/test.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/Font.spritefont</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/grid.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/pointer.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/room 1.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/room 2.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/Room Tiles/transparent.png</File>
+    <File>C:/Users/jiaao/source/repos/basic_test/basic_test/Content/test sheet.png</File>
+  </SourceFiles>
+  <DestFiles>
+    <File xsi:nil="true" />
+  </DestFiles>
+</SourceFileCollection>
